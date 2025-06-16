@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Search, Menu, X } from "lucide-react";
@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 const Header = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
 
   const navigationItems = [
     { label: "Início", href: "/" },
@@ -22,8 +23,9 @@ const Header = () => {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      // TODO: Implement search functionality
-      console.log("Searching for:", searchQuery);
+      navigate(`/busca?q=${encodeURIComponent(searchQuery.trim())}`);
+      setIsSearchOpen(false);
+      setSearchQuery("");
     }
   };
 
@@ -108,6 +110,7 @@ const Header = () => {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border-exaltius-blue/20 focus:border-exaltius-blue focus:ring-exaltius-blue"
+                  autoFocus
                 />
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
               </div>
