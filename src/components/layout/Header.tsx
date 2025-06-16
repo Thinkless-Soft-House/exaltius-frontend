@@ -36,7 +36,7 @@ const Header = () => {
             <img 
               src="/lovable-uploads/0ef498cc-30ac-42a5-bb0d-f62f8d06612b.png" 
               alt="Exaltius" 
-              className="h-16 w-auto" 
+              className="h-32 w-auto" 
             />
           </Link>
 
@@ -78,7 +78,7 @@ const Header = () => {
                   <img 
                     src="/lovable-uploads/0ef498cc-30ac-42a5-bb0d-f62f8d06612b.png" 
                     alt="Exaltius" 
-                    className="h-16 w-auto" 
+                    className="h-32 w-auto" 
                   />
                   <nav className="flex flex-col space-y-4">
                     {navigationItems.map((item) => (
