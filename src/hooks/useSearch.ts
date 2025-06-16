@@ -12,6 +12,7 @@ export const useSearch = () => {
     }
 
     const query = searchQuery.toLowerCase().trim();
+    const searchTerms = query.split(' ').filter(term => term.length > 0);
     
     return blogPosts.filter((post) => {
       const searchableText = [
@@ -23,7 +24,10 @@ export const useSearch = () => {
         ...post.tags
       ].join(' ').toLowerCase();
 
-      return searchableText.includes(query);
+      // Busca por qualquer um dos termos
+      return searchTerms.some(term => searchableText.includes(term)) ||
+             // Ou busca pela frase completa
+             searchableText.includes(query);
     });
   }, [searchQuery]);
 
