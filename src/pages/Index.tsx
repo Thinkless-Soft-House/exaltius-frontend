@@ -321,6 +321,7 @@ const Index = () => {
 
   // Infinite scroll handler
   const handleObserver = useCallback((entries: any) => {
+      console.log('[DEBUG] infiniteScrollEnabled:', infiniteScrollEnabled, 'hasMounted:', hasMounted);
     if (!hasMounted || !infiniteScrollEnabled) return;
     const target = entries[0];
     console.log('[HOME: INFINITE SCROLL]', target);
