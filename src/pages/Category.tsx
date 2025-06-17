@@ -224,7 +224,6 @@ const Category = () => {
                     </Button>
                   </div>
                 )}
-
                 {/* Ad Space */}
                 <div className="bg-gradient-to-r from-slate-100 to-slate-50 border-dashed border-2 border-slate-300 rounded-lg p-8 text-center mt-12">
                   <div className="text-sm text-slate-500 mb-2">Espaço Publicitário</div>
