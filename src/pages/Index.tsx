@@ -365,6 +365,18 @@ const Index = () => {
   // Adiciona classe utilitária para fade-in
   const fadeInClass = "transition-opacity duration-500 ease-in opacity-0 animate-fade-in";
 
+  // AdSense handler para anúncios entre tags
+  useEffect(() => {
+    const ads = document.querySelectorAll('.adsbygoogle');
+    if (window.adsbygoogle && ads.length) {
+      ads.forEach(() => {
+        try {
+          (window.adsbygoogle = window.adsbygoogle || []).push({});
+        } catch (e) {}
+      });
+    }
+  }, [visibleTags]);
+
   return (
     <Layout>
       <div className="container mx-auto px-4 lg:px-8 py-8">
@@ -392,8 +404,8 @@ const Index = () => {
           {/* Main Content */}
           <div className="flex-1 space-y-12">
             {/* Seções horizontais Netflix por tag, agora paginadas */}
-            {visibleTags.map((tag, idx) =>
-              postsByTag[tag] && postsByTag[tag].length > 0 ? (
+            {visibleTags.map((tag, idx) => {
+              const tagSection = postsByTag[tag] && postsByTag[tag].length > 0 ? (
                 <section
                   key={tag}
                   className={`mb-10 ${fadeInClass}`}
@@ -408,8 +420,27 @@ const Index = () => {
                     ))}
                   </div>
                 </section>
-              ) : null
-            )}
+              ) : null;
+              // Após cada 2 tags, insere um anúncio AdSense
+              if ((idx + 1) % 2 === 0) {
+                return [
+                  tagSection,
+                  <div key={`ad-${idx}`} className="my-8 bg-gradient-to-r from-slate-100 to-slate-50 border-dashed border-2 border-slate-300 rounded-lg p-6 text-center">
+                    <div className="text-sm text-slate-500 mb-2">Espaço Publicitário</div>
+                    <div className="text-xs text-slate-400">300x600 - Entre Seções</div>
+                    <div className="mt-2 p-2 bg-white/50 rounded border border-slate-200 flex justify-center">
+                      <ins
+                        className="adsbygoogle"
+                        style={{ display: "inline-block", width: 300, height: 600 }}
+                        data-ad-client="ca-pub-6546754569463012"
+                        data-ad-slot="8857888947"
+                      />
+                    </div>
+                  </div>
+                ];
+              }
+              return tagSection;
+            })}
             {/* Loader para infinite scroll de tags */}
             <div ref={loader} />
           </div>
