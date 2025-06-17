@@ -177,7 +177,6 @@ const Index = () => {
   const [categoryPosts, setCategoryPosts] = useState<{[key: string]: Post[]}>({});
   const [page, setPage] = useState(1);
   const [displayedPosts, setDisplayedPosts] = useState(ALL_POSTS.slice(0, PAGE_SIZE));
-  const [sidebars, setSidebars] = useState([0]); // Para duplicar sidebar/ad spaces
   const [tagPage, setTagPage] = useState(1); // Página de tags
   const [visibleTags, setVisibleTags] = useState(TAGS.slice(0, TAGS_PER_PAGE));
   const loader = useRef(null);
@@ -305,7 +304,6 @@ const Index = () => {
     setVisibleTags(TAGS.slice(0, TAGS_PER_PAGE));
     setPage(1);
     setDisplayedPosts(ALL_POSTS.slice(0, PAGE_SIZE));
-    setSidebars([0]);
     console.log('[HOME: MONTANDO PÁGINA - RESETANDO ESTADO]');
   }, []);
 
@@ -328,6 +326,7 @@ const Index = () => {
     if (target.isIntersecting) {
       console.log('[HOME: CARREGANDO MAIS POSTS INFINITAMENTE]');
       setTagPage((prev) => prev + 1);
+      setPage((prev) => prev + 1); // Adiciona esta linha para carregar mais sidebars
     }
   }, [hasMounted, infiniteScrollEnabled]);
 
@@ -347,10 +346,9 @@ const Index = () => {
     setVisibleTags(TAGS.slice(0, tagPage * TAGS_PER_PAGE));
   }, [tagPage]);
 
-  // Atualiza posts exibidos e sidebars a cada página
+  // Atualiza posts exibidos a cada página
   useEffect(() => {
     setDisplayedPosts(ALL_POSTS.slice(0, page * PAGE_SIZE));
-    setSidebars(Array.from({ length: page }, (_, i) => i));
   }, [page]);
 
   // Agrupa posts por tag
@@ -376,6 +374,9 @@ const Index = () => {
       });
     }
   }, [visibleTags]);
+
+  // Substitua o uso de sidebars por:
+  const sidebars = Array.from({ length: tagPage }, (_, i) => i);
 
   return (
     <Layout>
@@ -425,17 +426,15 @@ const Index = () => {
               if ((idx + 1) % 2 === 0) {
                 return [
                   tagSection,
-                  <div key={`ad-${idx}`} className="my-8 bg-gradient-to-r from-slate-100 to-slate-50 border-dashed border-2 border-slate-300 rounded-lg p-6 text-center">
-                    <div className="text-sm text-slate-500 mb-2">Espaço Publicitário</div>
-                    <div className="text-xs text-slate-400">300x600 - Entre Seções</div>
-                    <div className="mt-2 p-2 bg-white/50 rounded border border-slate-200 flex justify-center">
-                      <ins
-                        className="adsbygoogle"
-                        style={{ display: "inline-block", width: 300, height: 600 }}
-                        data-ad-client="ca-pub-6546754569463012"
-                        data-ad-slot="8857888947"
-                      />
-                    </div>
+                  <div key={`ad-tag-${idx}`} className="mt-2 p-2 bg-white/50 rounded border border-slate-200 flex justify-center">
+                    <ins
+                      className="adsbygoogle"
+                      style={{ display: "block" }}
+                      data-ad-client="ca-pub-6546754569463012"
+                      data-ad-slot="8857888947"
+                      data-ad-format="auto"
+                      data-full-width-responsive="true"
+                    />
                   </div>
                 ];
               }
@@ -448,15 +447,7 @@ const Index = () => {
           <div className="flex flex-col gap-8 min-w-[320px]">
             {sidebars.map((i) => (
               <div key={i}>
-                <Sidebar />
-                {/* Ad space mockado */}
-                <div className="my-6 bg-gradient-to-r from-slate-100 to-slate-50 border-dashed border-2 border-slate-300 rounded-lg p-6 text-center">
-                  <div className="text-sm text-slate-500 mb-2">Espaço Publicitário</div>
-                  <div className="text-xs text-slate-400">300x250 - Sidebar</div>
-                  <div className="mt-2 p-2 bg-white/50 rounded border border-slate-200">
-                    <div className="text-xs text-slate-600">Anúncio AdSense</div>
-                  </div>
-                </div>
+                <Sidebar blockPages={sidebars.length} />
               </div>
             ))}
           </div>
