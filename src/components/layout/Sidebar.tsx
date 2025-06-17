@@ -102,10 +102,13 @@ const Sidebar = ({ currentPostId, category }: SidebarProps) => {
     });
   };
 
-  return (
-    <aside className="w-full lg:w-80 space-y-6">
-      {/* Ad Space 1 */}
-      <Card className="bg-gradient-to-r from-slate-100 to-slate-50 border-dashed border-2 border-slate-300">
+  // Gera blocos de anúncio e intercala posts especiais a cada 3 anúncios
+  const renderSidebarBlocks = () => {
+    const blocks = [];
+    let adCount = 0;
+    let specialCount = 0;
+    const adBlocks = [
+      <Card key="ad-1" className="bg-gradient-to-r from-slate-100 to-slate-50 border-dashed border-2 border-slate-300">
         <CardContent className="p-6 text-center">
           <div className="text-sm text-slate-500 mb-2">Espaço Publicitário</div>
           <div className="text-xs text-slate-400">300x250</div>
@@ -113,49 +116,8 @@ const Sidebar = ({ currentPostId, category }: SidebarProps) => {
             <div className="text-xs text-slate-600">Anúncio AdSense</div>
           </div>
         </CardContent>
-      </Card>
-
-      {/* Related Posts */}
-      {relatedPosts.length > 0 && (
-        <Card className="sidebar-sticky">
-          <CardHeader>
-            <CardTitle className="text-lg font-bold text-exaltius-blue flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-exaltius-gold" />
-              Posts Relacionados
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {relatedPosts.map((post) => (
-              <Link 
-                key={post.id} 
-                to={`/post/${post.slug}`}
-                className="block group"
-              >
-                <div className="space-y-2 p-3 rounded-lg hover:bg-slate-50 transition-all duration-200 border border-transparent hover:border-slate-200">
-                  <h4 className="font-semibold text-sm text-slate-900 group-hover:text-exaltius-blue transition-colors line-clamp-2">
-                    {post.title}
-                  </h4>
-                  <p className="text-xs text-slate-600 line-clamp-2">
-                    {post.excerpt}
-                  </p>
-                  <div className="flex items-center justify-between text-xs text-slate-500">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-3 w-3" />
-                      <span>{formatDate(post.publishedAt)}</span>
-                    </div>
-                    <Badge variant="secondary" className="text-xs bg-exaltius-gold/10 text-exaltius-blue border-exaltius-gold/20">
-                      {post.category}
-                    </Badge>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Ad Space 2 */}
-      <Card className="bg-gradient-to-r from-amber-50 to-yellow-50 border-dashed border-2 border-amber-200">
+      </Card>,
+      <Card key="ad-2" className="bg-gradient-to-r from-amber-50 to-yellow-50 border-dashed border-2 border-amber-200">
         <CardContent className="p-6 text-center">
           <div className="text-sm text-amber-600 mb-2">Espaço Publicitário</div>
           <div className="text-xs text-amber-500">300x600</div>
@@ -163,46 +125,115 @@ const Sidebar = ({ currentPostId, category }: SidebarProps) => {
             <div className="text-xs text-amber-700">Anúncio Display</div>
           </div>
         </CardContent>
+      </Card>,
+      <Card key="ad-3" className="bg-gradient-to-r from-blue-50 to-blue-100 border-dashed border-2 border-blue-200">
+        <CardContent className="p-6 text-center">
+          <div className="text-sm text-blue-600 mb-2">Espaço Publicitário</div>
+          <div className="text-xs text-blue-500">160x600</div>
+          <div className="mt-4 p-4 bg-white/50 rounded border border-blue-200">
+            <div className="text-xs text-blue-700">Anúncio Skyscraper</div>
+          </div>
+        </CardContent>
+      </Card>,
+      // Repete para simular mais anúncios
+      <Card key="ad-4" className="bg-gradient-to-r from-slate-100 to-slate-50 border-dashed border-2 border-slate-300">
+        <CardContent className="p-6 text-center">
+          <div className="text-sm text-slate-500 mb-2">Espaço Publicitário</div>
+          <div className="text-xs text-slate-400">300x250</div>
+          <div className="mt-4 p-4 bg-white/50 rounded border border-slate-200">
+            <div className="text-xs text-slate-600">Anúncio AdSense</div>
+          </div>
+        </CardContent>
+      </Card>,
+      <Card key="ad-5" className="bg-gradient-to-r from-amber-50 to-yellow-50 border-dashed border-2 border-amber-200">
+        <CardContent className="p-6 text-center">
+          <div className="text-sm text-amber-600 mb-2">Espaço Publicitário</div>
+          <div className="text-xs text-amber-500">300x600</div>
+          <div className="mt-4 p-4 bg-white/50 rounded border border-amber-200">
+            <div className="text-xs text-amber-700">Anúncio Display</div>
+          </div>
+        </CardContent>
+      </Card>,
+      <Card key="ad-6" className="bg-gradient-to-r from-blue-50 to-blue-100 border-dashed border-2 border-blue-200">
+        <CardContent className="p-6 text-center">
+          <div className="text-sm text-blue-600 mb-2">Espaço Publicitário</div>
+          <div className="text-xs text-blue-500">160x600</div>
+          <div className="mt-4 p-4 bg-white/50 rounded border border-blue-200">
+            <div className="text-xs text-blue-700">Anúncio Skyscraper</div>
+          </div>
+        </CardContent>
       </Card>
-
-      {/* Popular Posts */}
-      {popularPosts.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-bold text-exaltius-blue flex items-center gap-2">
-              <Eye className="h-5 w-5 text-exaltius-gold" />
-              Mais Lidos
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {popularPosts.map((post, index) => (
-              <Link 
-                key={post.id} 
-                to={`/post/${post.slug}`}
-                className="block group"
-              >
-                <div className="flex items-start space-x-3 p-3 rounded-lg hover:bg-slate-50 transition-all duration-200 border border-transparent hover:border-slate-200">
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-exaltius-gold text-exaltius-blue font-bold text-sm flex items-center justify-center">
-                    {index + 1}
-                  </div>
-                  <div className="space-y-1">
+    ];
+    for (let i = 0; i < adBlocks.length; i++) {
+      blocks.push(adBlocks[i]);
+      adCount++;
+      if (adCount % 3 === 0) {
+        // Alterna entre bloco de relacionados e mais lidos
+        if (specialCount % 2 === 0 && relatedPosts.length > 0) {
+          blocks.push(
+            <Card key={`relacionado-${specialCount}`} className="sidebar-sticky">
+              <CardHeader>
+                <CardTitle className="text-lg font-bold text-exaltius-blue flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-exaltius-gold" />
+                  Post Relacionado
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Link 
+                  to={`/post/${relatedPosts[0].slug}`}
+                  className="block group"
+                >
+                  <div className="space-y-2 p-3 rounded-lg hover:bg-slate-50 transition-all duration-200 border border-transparent hover:border-slate-200">
                     <h4 className="font-semibold text-sm text-slate-900 group-hover:text-exaltius-blue transition-colors line-clamp-2">
-                      {post.title}
+                      {relatedPosts[0].title}
                     </h4>
-                    <div className="flex items-center gap-3 text-xs text-slate-500">
-                      <span>{post.views.toLocaleString()} visualizações</span>
-                      <span>{post.readTime} min leitura</span>
+                    <p className="text-xs text-slate-600 line-clamp-2">
+                      {relatedPosts[0].excerpt}
+                    </p>
+                  </div>
+                </Link>
+              </CardContent>
+            </Card>
+          );
+        } else if (popularPosts.length > 0) {
+          blocks.push(
+            <Card key={`maislido-${specialCount}`}>
+              <CardHeader>
+                <CardTitle className="text-lg font-bold text-exaltius-blue flex items-center gap-2">
+                  <Eye className="h-5 w-5 text-exaltius-gold" />
+                  Mais Lido
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Link 
+                  to={`/post/${popularPosts[0].slug}`}
+                  className="block group"
+                >
+                  <div className="flex items-start space-x-3 p-3 rounded-lg hover:bg-slate-50 transition-all duration-200 border border-transparent hover:border-slate-200">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-exaltius-gold text-exaltius-blue font-bold text-sm flex items-center justify-center">
+                      1
+                    </div>
+                    <div className="space-y-1">
+                      <h4 className="font-semibold text-sm text-slate-900 group-hover:text-exaltius-blue transition-colors line-clamp-2">
+                        {popularPosts[0].title}
+                      </h4>
+                      <div className="flex items-center gap-3 text-xs text-slate-500">
+                        <span>{popularPosts[0].views.toLocaleString()} visualizações</span>
+                        <span>{popularPosts[0].readTime} min leitura</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </Link>
-            ))}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Newsletter Signup */}
-      <Card className="bg-gradient-to-r from-exaltius-blue to-exaltius-blue-light text-white">
+                </Link>
+              </CardContent>
+            </Card>
+          );
+        }
+        specialCount++;
+      }
+    }
+    // Newsletter sempre ao final
+    blocks.push(
+      <Card key="newsletter" className="bg-gradient-to-r from-exaltius-blue to-exaltius-blue-light text-white">
         <CardContent className="p-6 text-center">
           <h3 className="font-bold text-lg mb-2">Newsletter Exaltius</h3>
           <p className="text-sm mb-4 opacity-90">
@@ -225,6 +256,13 @@ const Sidebar = ({ currentPostId, category }: SidebarProps) => {
           </div>
         </CardContent>
       </Card>
+    );
+    return blocks;
+  };
+
+  return (
+    <aside className="w-full lg:w-80 space-y-6">
+      {renderSidebarBlocks()}
     </aside>
   );
 };
