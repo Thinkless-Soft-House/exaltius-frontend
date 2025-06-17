@@ -147,13 +147,13 @@ const Index = () => {
             Descubra estratégias comprovadas para investir, economizar e construir riqueza de forma inteligente. 
             Sua jornada rumo à independência financeira começa aqui.
           </p>
-          <Button 
+          {/* <Button 
             size="lg" 
             className="bg-exaltius-gold text-exaltius-blue hover:bg-exaltius-gold-light font-semibold px-8 py-4 text-lg"
           >
             Começar Agora
             <ChevronRight className="ml-2 h-5 w-5" />
-          </Button>
+          </Button> */}
         </section>
 
         {/* Main Content Grid */}

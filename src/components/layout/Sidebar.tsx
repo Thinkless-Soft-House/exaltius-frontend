@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -213,10 +212,15 @@ const Sidebar = ({ currentPostId, category }: SidebarProps) => {
             <input 
               type="email" 
               placeholder="Seu melhor email"
-              className="w-full px-4 py-2 rounded-md text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-exaltius-gold"
+              className="w-full px-4 py-2 rounded-md text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-exaltius-gold cursor-not-allowed opacity-60"
+              disabled
+              tabIndex={-1}
             />
-            <button className="w-full bg-exaltius-gold text-exaltius-blue font-semibold py-2 px-4 rounded-md hover:bg-exaltius-gold-light transition-colors duration-200">
-              Inscrever-se
+            <button 
+              className="w-full bg-exaltius-gold text-exaltius-blue font-semibold py-2 px-4 rounded-md opacity-60 cursor-not-allowed"
+              disabled
+            >
+              Em breve
             </button>
           </div>
         </CardContent>

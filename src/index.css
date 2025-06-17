@@ -98,7 +98,7 @@
   }
   
   .sidebar-sticky {
-    position: sticky;
+    /* position: sticky; */
     top: 2rem;
     height: fit-content;
   }
