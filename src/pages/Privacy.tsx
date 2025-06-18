@@ -178,7 +178,7 @@ const Privacy = () => {
         </Card>
 
         {/* Related Articles */}
-        <div className="mt-16">
+        {/* <div className="mt-16">
           <h2 className="text-3xl font-bold text-exaltius-blue mb-8 text-center">
             Artigos Relacionados
           </h2>
@@ -250,7 +250,7 @@ const Privacy = () => {
               </CardContent>
             </Card>
           </div>
-        </div>
+        </div> */}
       </div>
     </Layout>
   );

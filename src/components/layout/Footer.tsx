@@ -13,12 +13,12 @@ const Footer = () => {
     { label: t.terms_of_use || "Termos de Uso", href: "/termos" },
   ];
 
-  const categories = [
-    { label: t.investments || "Investimentos", href: "/categoria/investimentos" },
-    { label: t.extra_income || "Renda Extra", href: "/categoria/renda-extra" },
-    { label: t.personal_finance || "Finanças Pessoais", href: "/categoria/financas-pessoais" },
-    { label: t.financial_education || "Educação Financeira", href: "/categoria/educacao-financeira" },
-  ];
+  // const categories = [
+  //   { label: t.investments || "Investimentos", href: "/categoria/investimentos" },
+  //   { label: t.extra_income || "Renda Extra", href: "/categoria/renda-extra" },
+  //   { label: t.personal_finance || "Finanças Pessoais", href: "/categoria/financas-pessoais" },
+  //   { label: t.financial_education || "Educação Financeira", href: "/categoria/educacao-financeira" },
+  // ];
 
   const socialLinks = [
     { icon: Facebook, href: "#", label: t.facebook || "Facebook" },
@@ -74,7 +74,7 @@ const Footer = () => {
           </div>
 
           {/* Categories */}
-          <div className="space-y-4">
+          {/* <div className="space-y-4">
             <h3 className="text-lg font-semibold text-white">{t.categories || "Categorias"}</h3>
             <ul className="space-y-2">
               {categories.map((category) => (
@@ -88,7 +88,7 @@ const Footer = () => {
                 </li>
               ))}
             </ul>
-          </div>
+          </div> */}
         </div>
       </div>
 
