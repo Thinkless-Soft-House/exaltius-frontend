@@ -201,7 +201,15 @@ const Category = () => {
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-12">
                   {posts.map((post) => (
-                    <PostCard key={post.id} {...post} size="medium" />
+                    <a
+                      key={post.id}
+                      href="https://exaltius.com/post/como-investir-acoes-iniciantes-guia-completo-2024"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ textDecoration: 'none' }}
+                    >
+                      <PostCard {...post} size="medium" />
+                    </a>
                   ))}
                 </div>
 

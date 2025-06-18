@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import Layout from '@/components/layout/Layout';
@@ -78,9 +77,9 @@ const Search = () => {
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex-1">
                             <CardTitle className="text-xl mb-2 hover:text-exaltius-blue transition-colors">
-                              <Link to={`/post/${post.slug}`}>
+                              <a href="https://exaltius.com/post/como-investir-acoes-iniciantes-guia-completo-2024" target="_blank" rel="noopener noreferrer">
                                 {post.title}
-                              </Link>
+                              </a>
                             </CardTitle>
                             <div className="flex items-center gap-4 text-sm text-slate-500 mb-3">
                               <span className="flex items-center gap-1">

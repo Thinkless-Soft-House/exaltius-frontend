@@ -53,7 +53,7 @@ const ALL_POSTS = [
   {
     id: "2",
     title: "10 Formas Comprovadas de Gerar Renda Extra Online",
-    slug: "10-formas-gerar-renda-extra-online",
+    slug: "como-investir-acoes-iniciantes-guia-completo-2024",
     excerpt: "Explore métodos testados e aprovados para aumentar sua renda trabalhando pela internet. Descubra oportunidades que podem transformar suas finanças.",
     category: "Renda Extra",
     author: "Ana Santos",
@@ -66,7 +66,7 @@ const ALL_POSTS = [
   {
     id: "3",
     title: "Planejamento Financeiro Pessoal: Método dos 50/30/20",
-    slug: "planejamento-financeiro-metodo-50-30-20",
+    slug: "como-investir-acoes-iniciantes-guia-completo-2024",
     excerpt: "Aprenda a organizar suas finanças usando o método mais eficaz do mundo. Uma estratégia simples que funciona para qualquer nível de renda.",
     category: "Finanças Pessoais",
     author: "Roberto Lima",
@@ -79,7 +79,7 @@ const ALL_POSTS = [
   {
     id: "4",
     title: "Tesouro Direto vs CDB: Qual Escolher em 2024?",
-    slug: "tesouro-direto-vs-cdb-qual-escolher-2024",
+    slug: "como-investir-acoes-iniciantes-guia-completo-2024",
     excerpt: "Comparação detalhada entre duas das principais opções de investimento conservador no Brasil. Saiba qual é a melhor para o seu perfil.",
     category: "Investimentos",
     author: "Marina Costa",
@@ -92,7 +92,7 @@ const ALL_POSTS = [
   {
     id: "5",
     title: "Como Criar um Fundo de Emergência em 12 Meses",
-    slug: "como-criar-fundo-emergencia-12-meses",
+    slug: "como-investir-acoes-iniciantes-guia-completo-2024",
     excerpt: "Estratégia passo a passo para construir sua reserva de emergência de forma gradual e sustentável, sem comprometer seu orçamento atual.",
     category: "Finanças Pessoais",
     author: "João Oliveira",
@@ -106,7 +106,7 @@ const ALL_POSTS = [
   {
     id: "6",
     title: "Como economizar no supermercado sem abrir mão da qualidade",
-    slug: "como-economizar-no-supermercado",
+    slug: "como-investir-acoes-iniciantes-guia-completo-2024",
     excerpt: "Dicas práticas para economizar nas compras do mês e ainda manter uma alimentação saudável.",
     category: "Finanças Pessoais",
     author: "Maria Souza",
@@ -119,7 +119,7 @@ const ALL_POSTS = [
   {
     id: "7",
     title: "O poder dos juros compostos: entenda de uma vez por todas",
-    slug: "poder-dos-juros-compostos",
+    slug: "como-investir-acoes-iniciantes-guia-completo-2024",
     excerpt: "Descubra como os juros compostos podem transformar seus investimentos ao longo do tempo.",
     category: "Investimentos",
     author: "Lucas Pereira",
@@ -132,7 +132,7 @@ const ALL_POSTS = [
   {
     id: "8",
     title: "Como negociar dívidas e limpar seu nome",
-    slug: "como-negociar-dividas",
+    slug: "como-investir-acoes-iniciantes-guia-completo-2024",
     excerpt: "Passo a passo para sair do vermelho e recuperar sua saúde financeira.",
     category: "Finanças Pessoais",
     author: "Fernanda Dias",
@@ -145,7 +145,7 @@ const ALL_POSTS = [
   {
     id: "9",
     title: "5 hábitos de pessoas que enriquecem com pouco dinheiro",
-    slug: "habitos-de-enriquecimento",
+    slug: "como-investir-acoes-iniciantes-guia-completo-2024",
     excerpt: "Conheça atitudes simples que podem mudar sua vida financeira.",
     category: "Finanças Pessoais",
     author: "Paulo Mendes",
@@ -158,7 +158,7 @@ const ALL_POSTS = [
   {
     id: "10",
     title: "Como a educação financeira pode mudar sua vida",
-    slug: "educacao-financeira-transformadora",
+    slug: "como-investir-acoes-iniciantes-guia-completo-2024",
     excerpt: "Entenda a importância de aprender sobre dinheiro desde cedo.",
     category: "Educação Financeira",
     author: "Juliana Ramos",
@@ -206,7 +206,7 @@ const Index = () => {
       {
         id: "2",
         title: "10 Formas Comprovadas de Gerar Renda Extra Online",
-        slug: "10-formas-gerar-renda-extra-online",
+        slug: "como-investir-acoes-iniciantes-guia-completo-2024",
         excerpt: "Explore métodos testados e aprovados para aumentar sua renda trabalhando pela internet. Descubra oportunidades que podem transformar suas finanças.",
         category: "Renda Extra",
         author: "Ana Santos",
@@ -218,7 +218,7 @@ const Index = () => {
       {
         id: "3",
         title: "Planejamento Financeiro Pessoal: Método dos 50/30/20",
-        slug: "planejamento-financeiro-metodo-50-30-20",
+        slug: "como-investir-acoes-iniciantes-guia-completo-2024",
         excerpt: "Aprenda a organizar suas finanças usando o método mais eficaz do mundo. Uma estratégia simples que funciona para qualquer nível de renda.",
         category: "Finanças Pessoais",
         author: "Roberto Lima",
@@ -230,7 +230,7 @@ const Index = () => {
       {
         id: "4",
         title: "Tesouro Direto vs CDB: Qual Escolher em 2024?",
-        slug: "tesouro-direto-vs-cdb-qual-escolher-2024",
+        slug: "como-investir-acoes-iniciantes-guia-completo-2024",
         excerpt: "Comparação detalhada entre duas das principais opções de investimento conservador no Brasil. Saiba qual é a melhor para o seu perfil.",
         category: "Investimentos",
         author: "Marina Costa",
@@ -242,7 +242,7 @@ const Index = () => {
       {
         id: "5",
         title: "Como Criar um Fundo de Emergência em 12 Meses",
-        slug: "como-criar-fundo-emergencia-12-meses",
+        slug: "como-investir-acoes-iniciantes-guia-completo-2024",
         excerpt: "Estratégia passo a passo para construir sua reserva de emergência de forma gradual e sustentável, sem comprometer seu orçamento atual.",
         category: "Finanças Pessoais",
         author: "João Oliveira",

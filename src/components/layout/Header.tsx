@@ -56,7 +56,8 @@ const Header = () => {
       { label: t.home || "Início", href: "/" },
       ...tagNavItems.map((tag) => ({
         label: tag.name?.[idioma] || tag.name?.pt || tag.slug,
-        href: `/categoria/${tag.slug}`,
+        // href: `/categoria/${tag.slug}`,
+        href: '/',
       })),
     ],
     [t, tagNavItems, idioma]
