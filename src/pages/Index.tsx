@@ -5,6 +5,7 @@ import PostCard from "@/components/blog/PostCard";
 import { Button } from "@/components/ui/button";
 import { TrendingUp, DollarSign, PiggyBank, GraduationCap, ChevronRight } from "lucide-react";
 import { set } from "date-fns";
+import { useI18n } from "@/i18n/I18nProvider";
 
 interface Post {
   id: string;
@@ -173,11 +174,11 @@ const PAGE_SIZE = 5;
 const TAGS_PER_PAGE = 3; // Quantas tags/seções mostrar por vez
 
 const Index = () => {
+  const { t } = useI18n();
   const [featuredPosts, setFeaturedPosts] = useState<Post[]>([]);
   const [categoryPosts, setCategoryPosts] = useState<{[key: string]: Post[]}>({});
   const [page, setPage] = useState(1);
   const [displayedPosts, setDisplayedPosts] = useState(ALL_POSTS.slice(0, PAGE_SIZE));
-  const [sidebars, setSidebars] = useState([0]); // Para duplicar sidebar/ad spaces
   const [tagPage, setTagPage] = useState(1); // Página de tags
   const [visibleTags, setVisibleTags] = useState(TAGS.slice(0, TAGS_PER_PAGE));
   const loader = useRef(null);
@@ -305,7 +306,6 @@ const Index = () => {
     setVisibleTags(TAGS.slice(0, TAGS_PER_PAGE));
     setPage(1);
     setDisplayedPosts(ALL_POSTS.slice(0, PAGE_SIZE));
-    setSidebars([0]);
     console.log('[HOME: MONTANDO PÁGINA - RESETANDO ESTADO]');
   }, []);
 
@@ -328,6 +328,7 @@ const Index = () => {
     if (target.isIntersecting) {
       console.log('[HOME: CARREGANDO MAIS POSTS INFINITAMENTE]');
       setTagPage((prev) => prev + 1);
+      setPage((prev) => prev + 1); // Adiciona esta linha para carregar mais sidebars
     }
   }, [hasMounted, infiniteScrollEnabled]);
 
@@ -347,10 +348,9 @@ const Index = () => {
     setVisibleTags(TAGS.slice(0, tagPage * TAGS_PER_PAGE));
   }, [tagPage]);
 
-  // Atualiza posts exibidos e sidebars a cada página
+  // Atualiza posts exibidos a cada página
   useEffect(() => {
     setDisplayedPosts(ALL_POSTS.slice(0, page * PAGE_SIZE));
-    setSidebars(Array.from({ length: page }, (_, i) => i));
   }, [page]);
 
   // Agrupa posts por tag
@@ -377,18 +377,20 @@ const Index = () => {
     }
   }, [visibleTags]);
 
+  // Substitua o uso de sidebars por:
+  const sidebars = Array.from({ length: tagPage }, (_, i) => i);
+
   return (
     <Layout>
       <div className="container mx-auto px-4 lg:px-8 py-8">
         {/* Hero Section */}
         <section id="hero-section" className="text-center py-12 mb-12">
           <h1 className="text-4xl lg:text-6xl font-bold text-exaltius-blue mb-6 animate-fade-in">
-            Transforme Suas
-            <span className="block text-exaltius-gold">Finanças</span>
+            {t.transform_your || "Transforme Suas"}
+            <span className="block text-exaltius-gold">{t.finances || "Finanças"}</span>
           </h1>
           <p className="text-xl text-slate-600 max-w-3xl mx-auto mb-8 leading-relaxed animate-slide-up">
-            Descubra estratégias comprovadas para investir, economizar e construir riqueza de forma inteligente. 
-            Sua jornada rumo à independência financeira começa aqui.
+            {t.hero_subtitle || "Descubra estratégias comprovadas para investir, economizar e construir riqueza de forma inteligente. Sua jornada rumo à independência financeira começa aqui."}
           </p>
           {/* <Button 
             size="lg" 
@@ -425,17 +427,15 @@ const Index = () => {
               if ((idx + 1) % 2 === 0) {
                 return [
                   tagSection,
-                  <div key={`ad-${idx}`} className="my-8 bg-gradient-to-r from-slate-100 to-slate-50 border-dashed border-2 border-slate-300 rounded-lg p-6 text-center">
-                    <div className="text-sm text-slate-500 mb-2">Espaço Publicitário</div>
-                    <div className="text-xs text-slate-400">300x600 - Entre Seções</div>
-                    <div className="mt-2 p-2 bg-white/50 rounded border border-slate-200 flex justify-center">
-                      <ins
-                        className="adsbygoogle"
-                        style={{ display: "inline-block", width: 300, height: 600 }}
-                        data-ad-client="ca-pub-6546754569463012"
-                        data-ad-slot="8857888947"
-                      />
-                    </div>
+                  <div key={`ad-tag-${idx}`} className="mt-2 p-2 bg-white/50 rounded border border-slate-200 flex justify-center">
+                    <ins
+                      className="adsbygoogle"
+                      style={{ display: "block" }}
+                      data-ad-client="ca-pub-6546754569463012"
+                      data-ad-slot="8857888947"
+                      data-ad-format="auto"
+                      data-full-width-responsive="true"
+                    />
                   </div>
                 ];
               }
@@ -448,15 +448,7 @@ const Index = () => {
           <div className="flex flex-col gap-8 min-w-[320px]">
             {sidebars.map((i) => (
               <div key={i}>
-                <Sidebar />
-                {/* Ad space mockado */}
-                <div className="my-6 bg-gradient-to-r from-slate-100 to-slate-50 border-dashed border-2 border-slate-300 rounded-lg p-6 text-center">
-                  <div className="text-sm text-slate-500 mb-2">Espaço Publicitário</div>
-                  <div className="text-xs text-slate-400">300x250 - Sidebar</div>
-                  <div className="mt-2 p-2 bg-white/50 rounded border border-slate-200">
-                    <div className="text-xs text-slate-600">Anúncio AdSense</div>
-                  </div>
-                </div>
+                <Sidebar blockPages={sidebars.length} />
               </div>
             ))}
           </div>
