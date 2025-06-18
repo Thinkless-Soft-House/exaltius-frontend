@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { TrendingUp, DollarSign, PiggyBank, GraduationCap, ChevronRight } from "lucide-react";
 import { set } from "date-fns";
 import { useI18n } from "@/i18n/I18nProvider";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Post {
   id: string;
@@ -184,6 +185,8 @@ const Index = () => {
   const loader = useRef(null);
   const [hasMounted, setHasMounted] = useState(false);
   const [infiniteScrollEnabled, setInfiniteScrollEnabled] = useState(false);
+  const sidebars = Array.from({ length: tagPage }, (_, i) => i);
+  const isMobile = useIsMobile();
 
   // Mock data - In a real app, this would come from an API
   useEffect(() => {
@@ -377,9 +380,6 @@ const Index = () => {
     }
   }, [visibleTags]);
 
-  // Substitua o uso de sidebars por:
-  const sidebars = Array.from({ length: tagPage }, (_, i) => i);
-
   return (
     <Layout>
       <div className="container mx-auto px-4 lg:px-8 py-8">
@@ -445,13 +445,15 @@ const Index = () => {
             <div ref={loader} />
           </div>
           {/* Sidebar duplicada a cada scroll (mantém igual) */}
-          <div className="flex flex-col gap-8 min-w-[320px]">
-            {sidebars.map((i) => (
-              <div key={i}>
-                <Sidebar blockPages={sidebars.length} />
-              </div>
-            ))}
-          </div>
+          {!isMobile && (
+            <div className="flex flex-col gap-8 min-w-[320px]">
+              {sidebars.map((i) => (
+                <div key={i}>
+                  <Sidebar blockPages={sidebars.length} />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </Layout>

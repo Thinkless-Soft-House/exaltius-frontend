@@ -58,7 +58,6 @@ const Header = () => {
         label: tag.name?.[idioma] || tag.name?.pt || tag.slug,
         href: `/categoria/${tag.slug}`,
       })),
-      { label: t.about || "Sobre", href: "/sobre" },
     ],
     [t, tagNavItems, idioma]
   );
