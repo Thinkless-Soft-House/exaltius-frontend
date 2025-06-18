@@ -8,8 +8,7 @@ const Footer = () => {
 
   const quickLinks = [
     { label: t.home || "Início", href: "/" },
-    { label: t.about || "Sobre", href: "/sobre" },
-    { label: t.contact || "Contato", href: "/contato" },
+    // { label: t.contact || "Contato", href: "/contato" },
     { label: t.privacy_policy || "Política de Privacidade", href: "/privacidade" },
     { label: t.terms_of_use || "Termos de Uso", href: "/termos" },
   ];
