@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
@@ -6,6 +5,7 @@ import Sidebar from "@/components/layout/Sidebar";
 import PostCard from "@/components/blog/PostCard";
 import { Button } from "@/components/ui/button";
 import { TrendingUp, DollarSign, PiggyBank, GraduationCap, Loader2 } from "lucide-react";
+import { useI18n } from "@/i18n/I18nProvider";
 
 interface Post {
   id: string;
@@ -21,6 +21,7 @@ interface Post {
 }
 
 const Category = () => {
+  const { t } = useI18n();
   const { category } = useParams<{ category: string }>();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(false);
@@ -29,29 +30,29 @@ const Category = () => {
 
   const categoryInfo = {
     "investimentos": {
-      title: "Investimentos",
-      description: "Estratégias e dicas para fazer seu dinheiro render",
+      title: t.category_investments,
+      description: t.category_investments_desc,
       icon: TrendingUp,
       color: "text-green-600",
       bgColor: "bg-green-50"
     },
     "renda-extra": {
-      title: "Renda Extra",
-      description: "Formas de aumentar sua renda mensal",
+      title: t.category_extra_income,
+      description: t.category_extra_income_desc,
       icon: DollarSign,
       color: "text-blue-600",
       bgColor: "bg-blue-50"
     },
     "financas-pessoais": {
-      title: "Finanças Pessoais",
-      description: "Organize suas finanças e alcance seus objetivos",
+      title: t.category_personal_finance,
+      description: t.category_personal_finance_desc,
       icon: PiggyBank,
       color: "text-purple-600",
       bgColor: "bg-purple-50"
     },
     "educacao-financeira": {
-      title: "Educação Financeira",
-      description: "Conhecimento fundamental sobre dinheiro",
+      title: t.category_financial_education,
+      description: t.category_financial_education_desc,
       icon: GraduationCap,
       color: "text-amber-600",
       bgColor: "bg-amber-50"
@@ -64,10 +65,10 @@ const Category = () => {
   const mockPosts: Post[] = [
     {
       id: "1",
-      title: "Como Investir em Ações para Iniciantes: Guia Completo 2024",
+      title: t.how_to_invest_stocks,
       slug: "como-investir-acoes-iniciantes-guia-completo-2024",
-      excerpt: "Descubra tudo que você precisa saber para começar a investir em ações de forma segura e inteligente.",
-      category: "Investimentos",
+      excerpt: t.how_to_invest_stocks_desc,
+      category: t.category_investments,
       author: "Carlos Silva",
       publishedAt: "2024-01-15",
       readTime: 12,
@@ -76,10 +77,10 @@ const Category = () => {
     },
     {
       id: "2",
-      title: "Tesouro Direto vs CDB: Qual Escolher em 2024?",
+      title: t.treasury_vs_cdb,
       slug: "tesouro-direto-vs-cdb-qual-escolher-2024",
-      excerpt: "Comparação detalhada entre duas das principais opções de investimento conservador no Brasil.",
-      category: "Investimentos",
+      excerpt: t.treasury_vs_cdb_desc,
+      category: t.category_investments,
       author: "Marina Costa",
       publishedAt: "2024-01-08",
       readTime: 10,
@@ -88,10 +89,10 @@ const Category = () => {
     },
     {
       id: "3",
-      title: "Fundos de Investimento: Como Escolher o Melhor",
+      title: t.investment_funds,
       slug: "fundos-investimento-como-escolher-melhor",
-      excerpt: "Entenda os diferentes tipos de fundos e aprenda a avaliar qual se adequa melhor ao seu perfil.",
-      category: "Investimentos",
+      excerpt: t.investment_funds_desc,
+      category: t.category_investments,
       author: "Pedro Martins",
       publishedAt: "2024-01-03",
       readTime: 8,
@@ -100,10 +101,10 @@ const Category = () => {
     },
     {
       id: "4",
-      title: "10 Formas Comprovadas de Gerar Renda Extra Online",
+      title: t["10_ways_extra_income"],
       slug: "10-formas-gerar-renda-extra-online",
-      excerpt: "Explore métodos testados e aprovados para aumentar sua renda trabalhando pela internet.",
-      category: "Renda Extra",
+      excerpt: t["10_ways_extra_income_desc"],
+      category: t.category_extra_income,
       author: "Ana Santos",
       publishedAt: "2024-01-12",
       readTime: 8,
@@ -112,10 +113,10 @@ const Category = () => {
     },
     {
       id: "5",
-      title: "Planejamento Financeiro Pessoal: Método dos 50/30/20",
+      title: t.personal_finance_50_30_20,
       slug: "planejamento-financeiro-metodo-50-30-20",
-      excerpt: "Aprenda a organizar suas finanças usando o método mais eficaz do mundo.",
-      category: "Finanças Pessoais",
+      excerpt: t.personal_finance_50_30_20_desc,
+      category: t.category_personal_finance,
       author: "Roberto Lima",
       publishedAt: "2024-01-10",
       readTime: 6,
@@ -167,8 +168,8 @@ const Category = () => {
     return (
       <Layout>
         <div className="container mx-auto px-4 lg:px-8 py-16 text-center">
-          <h1 className="text-4xl font-bold text-slate-900 mb-4">Categoria não encontrada</h1>
-          <p className="text-slate-600">A categoria que você está procurando não existe.</p>
+          <h1 className="text-4xl font-bold text-slate-900 mb-4">{t.category_not_found}</h1>
+          <p className="text-slate-600">{t.category_not_found_desc}</p>
         </div>
       </Layout>
     );

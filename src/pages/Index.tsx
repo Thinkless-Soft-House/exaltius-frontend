@@ -5,6 +5,7 @@ import PostCard from "@/components/blog/PostCard";
 import { Button } from "@/components/ui/button";
 import { TrendingUp, DollarSign, PiggyBank, GraduationCap, ChevronRight } from "lucide-react";
 import { set } from "date-fns";
+import { useI18n } from "@/i18n/I18nProvider";
 
 interface Post {
   id: string;
@@ -173,6 +174,7 @@ const PAGE_SIZE = 5;
 const TAGS_PER_PAGE = 3; // Quantas tags/seções mostrar por vez
 
 const Index = () => {
+  const { t } = useI18n();
   const [featuredPosts, setFeaturedPosts] = useState<Post[]>([]);
   const [categoryPosts, setCategoryPosts] = useState<{[key: string]: Post[]}>({});
   const [page, setPage] = useState(1);
@@ -384,12 +386,11 @@ const Index = () => {
         {/* Hero Section */}
         <section id="hero-section" className="text-center py-12 mb-12">
           <h1 className="text-4xl lg:text-6xl font-bold text-exaltius-blue mb-6 animate-fade-in">
-            Transforme Suas
-            <span className="block text-exaltius-gold">Finanças</span>
+            {t.transform_your || "Transforme Suas"}
+            <span className="block text-exaltius-gold">{t.finances || "Finanças"}</span>
           </h1>
           <p className="text-xl text-slate-600 max-w-3xl mx-auto mb-8 leading-relaxed animate-slide-up">
-            Descubra estratégias comprovadas para investir, economizar e construir riqueza de forma inteligente. 
-            Sua jornada rumo à independência financeira começa aqui.
+            {t.hero_subtitle || "Descubra estratégias comprovadas para investir, economizar e construir riqueza de forma inteligente. Sua jornada rumo à independência financeira começa aqui."}
           </p>
           {/* <Button 
             size="lg" 
