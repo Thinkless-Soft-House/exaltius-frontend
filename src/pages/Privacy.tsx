@@ -4,7 +4,7 @@ import Layout from "@/components/layout/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Shield, Eye, Cookie, Share2, Lock, ExternalLink, UserCheck, RefreshCw } from "lucide-react";
-import { useI18n } from "@/i18n/I18nProvider";
+import { useI18n } from "@/i18n/useI18n";
 
 const Privacy = () => {
   const { t } = useI18n();
@@ -79,14 +79,14 @@ const Privacy = () => {
       <div className="container mx-auto px-4 lg:px-8 py-12">
         {/* Header */}
         <div className="text-center mb-12">
-          <Link 
-            to="/" 
+          <Link
+            to="/"
             className="inline-flex items-center text-exaltius-blue hover:text-exaltius-gold transition-colors duration-200 mb-6"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Voltar ao início
           </Link>
-          
+
           <div className="space-y-4">
             <h1 className="text-4xl lg:text-5xl font-bold text-exaltius-blue mb-4">
               Política de Privacidade
@@ -105,9 +105,9 @@ const Privacy = () => {
         <Card className="mb-8 border-l-4 border-l-exaltius-gold">
           <CardContent className="pt-6">
             <p className="text-lg text-slate-700 leading-relaxed">
-              Bem-vindo ao <strong className="text-exaltius-blue">Exaltius</strong> (https://exaltius.com), 
-              um portal dedicado a compartilhar conteúdos informativos sobre finanças, investimentos e 
-              desenvolvimento pessoal. Esta Política de Privacidade descreve como coletamos, usamos, 
+              Bem-vindo ao <strong className="text-exaltius-blue">Exaltius</strong> (https://exaltius.com),
+              um portal dedicado a compartilhar conteúdos informativos sobre finanças, investimentos e
+              desenvolvimento pessoal. Esta Política de Privacidade descreve como coletamos, usamos,
               armazenamos e protegemos os dados dos nossos visitantes.
             </p>
           </CardContent>
@@ -129,7 +129,7 @@ const Privacy = () => {
                 <p className="text-slate-700 leading-relaxed mb-4">
                   {section.content}
                 </p>
-                
+
                 {section.items && (
                   <ul className="space-y-2 ml-4">
                     {section.items.map((item, itemIndex) => (
@@ -162,12 +162,12 @@ const Privacy = () => {
               </div>
               <h3 className="text-2xl font-bold">Dúvidas sobre Privacidade?</h3>
               <p className="text-slate-200 max-w-2xl mx-auto">
-                Se você tiver dúvidas sobre esta Política de Privacidade ou sobre como tratamos seus dados, 
+                Se você tiver dúvidas sobre esta Política de Privacidade ou sobre como tratamos seus dados,
                 não hesite em entrar em contato conosco.
               </p>
               <div className="pt-4">
-                <Button 
-                  variant="secondary" 
+                <Button
+                  variant="secondary"
                   className="bg-exaltius-gold hover:bg-exaltius-gold-light text-exaltius-blue font-semibold"
                 >
                   contato@exaltius.com

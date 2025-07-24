@@ -5,9 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Search, Menu, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import Select, { components } from "react-select";
-import countryList from "react-select-country-list";
-import { useI18n } from "@/i18n/I18nProvider";
+import ReactCountryFlag from "react-country-flag";
+import { useI18n } from "@/i18n/useI18n";
 
 const Header = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -20,7 +19,7 @@ const Header = () => {
   const [tagNavItems, setTagNavItems] = useState([]);
   const navigate = useNavigate();
   const { getActive } = useGetTags();
-  const { t } = useI18n();
+  const { t, setLang } = useI18n();
 
   // Detecta idioma do localStorage ou fallback para 'pt'
   const idioma = useMemo(() => {
@@ -51,77 +50,41 @@ const Header = () => {
     });
   }, [getActive]);
 
-  const navigationItems = useMemo(
-    () => [
-      { label: t.home || "Início", href: "/" },
-    ],
-    [t, tagNavItems, idioma]
-  );
 
-  // Função para obter a bandeira pelo código do país
-  const getFlag = (code: string) =>
-    typeof code === "string"
-      ? String.fromCodePoint(
-          ...[...code.toUpperCase()].map((c) => 127397 + c.charCodeAt(0))
-        )
-      : "";
+  // Sempre atualiza ao renderizar
+  const navigationItems = [
+    { label: t.home || "Início", href: "/" },
+  ];
 
-  // Customização do label das opções
-  const formatOptionLabel = (option: any, { context }: any) => {
-    return (
-      <div
-        className="flex items-center gap-2"
-        style={{ minHeight: context === "menu" ? 28 : undefined }}
-      >
-        <span style={{ fontSize: context === "menu" ? 18 : 16 }}>
-          {getFlag(option.value)}
-        </span>
-        {context === "menu" && (
-          <span
-            style={{
-              fontSize: 12,
-              fontWeight: 500,
-              color: "#334155",
-              fontFamily: "inherit",
-              letterSpacing: 0.1,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-              maxWidth: 100,
-              display: "inline-block",
-            }}
-            className="transition-colors duration-200"
-          >
-            {option.label}
-          </span>
-        )}
-      </div>
-    );
+
+  // Opções fixas de idioma
+  const languageOptions = [
+    { value: "en", label: "English", countryCode: "US" },
+    { value: "pt-BR", label: "Português (Brasil)", countryCode: "BR" },
+    { value: "es", label: "Español", countryCode: "ES" },
+    { value: "fr", label: "Français", countryCode: "FR" },
+    { value: "de", label: "Deutsch", countryCode: "DE" },
+    { value: "it", label: "Italiano", countryCode: "IT" },
+  ];
+
+
+  // Estado do idioma selecionado e do dropdown
+  const [selectedLang, setSelectedLang] = useState(() => {
+    const stored = localStorage.getItem("lang");
+    if (stored && languageOptions.some(opt => opt.value === stored)) {
+      return languageOptions.find(opt => opt.value === stored)!;
+    }
+    localStorage.setItem("lang", "en");
+    return languageOptions.find(opt => opt.value === "en")!;
+  });
+  const [showLangDropdown, setShowLangDropdown] = useState(false);
+
+  const handleLangChange = (lang: typeof languageOptions[number]) => {
+    setSelectedLang(lang);
+    setLang(lang.value); // Troca o idioma no contexto instantaneamente
+    localStorage.setItem("lang", lang.value);
+    window.dispatchEvent(new Event("storage"));
   };
-
-  // Customização para mostrar bandeira e nome do país selecionado no controle
-  const SingleValue = (props: any) => (
-    <components.SingleValue {...props}>
-      <span style={{ fontSize: 20, marginRight: 8 }}>
-        {getFlag(props.data.value)}
-      </span>
-      <span style={{ fontSize: 13, color: "#334155", fontWeight: 500 }}>
-        {props.data.label}
-      </span>
-    </components.SingleValue>
-  );
-
-  // Customização do placeholder para mostrar o planeta
-  const CustomPlaceholder = (props: any) => (
-    <components.Placeholder {...props}>
-      <span style={{ fontSize: 20, marginRight: 8 }}>
-        {t.planet_emoji || "🌎"}
-      </span>
-      <span style={{ fontSize: 13, color: "#94a3b8" }}>
-        {t.search_country_placeholder || "Pesquisar país..."}
-      </span>
-    </components.Placeholder>
-  );
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -132,12 +95,8 @@ const Header = () => {
     }
   };
 
-  const handleCountryChange = (selected: any) => {
-    setCountry(selected);
-    localStorage.setItem("selectedCountry", JSON.stringify(selected));
-  };
 
-  const countryOptions = useMemo(() => countryList().getData(), []);
+  // Removido código antigo de countryList/countryOptions
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
@@ -168,111 +127,40 @@ const Header = () => {
 
           {/* Search and Mobile Menu */}
           <div className="flex items-center space-x-4">
-            {/* Country Selector */}
-            <div style={{ width: "auto", minWidth: 170, maxWidth: 170 }}>
-              <Select
-                options={countryOptions}
-                value={country}
-                onChange={handleCountryChange}
-                placeholder=""
-                isClearable
-                isSearchable={false}
-                classNamePrefix="country-select"
-                formatOptionLabel={formatOptionLabel}
-                components={{ SingleValue, Placeholder: CustomPlaceholder }}
-                styles={{
-                  control: (base, state) => ({
-                    ...base,
-                    minHeight: 40,
-                    height: 40,
-                    borderRadius: 8,
-                    borderColor: state.isFocused
-                      ? "#2563eb"
-                      : "rgba(30,41,59,0.12)",
-                    boxShadow: "none",
-                    background: "rgba(255,255,255,0.85)",
-                    transition: "border-color 0.2s",
-                    cursor: "pointer",
-                    width: "auto",
-                    "&:hover": {
-                      borderColor: "#2563eb",
-                    },
-                  }),
-                  menu: (base) => ({
-                    ...base,
-                    borderRadius: 8,
-                    boxShadow: "0 2px 8px rgba(30,41,59,0.08)",
-                    background: "rgba(255,255,255,0.98)",
-                    padding: 4,
-                    zIndex: 50,
-                  }),
-                  option: (base, state) => ({
-                    ...base,
-                    backgroundColor: state.isSelected
-                      ? "rgba(255,215,0,0.12)"
-                      : state.isFocused
-                      ? "rgba(37,99,235,0.08)"
-                      : "transparent",
-                    color: state.isSelected ? "#1d4ed8" : "#334155",
-                    borderRadius: 6,
-                    padding: "10px 16px",
-                    cursor: "pointer",
-                    fontSize: 12,
-                    minHeight: 32,
-                    display: "flex",
-                    alignItems: "center",
-                    fontWeight: 500,
-                    fontFamily: "inherit",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                    maxWidth: "90%",
-                  }),
-                  singleValue: (base) => ({
-                    ...base,
-                    margin: 0,
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    paddingLeft: 2,
-                  }),
-                  valueContainer: (base) => ({
-                    ...base,
-                    padding: 0,
-                    justifyContent: "flex-start",
-                  }),
-                  indicatorsContainer: (base) => ({
-                    ...base,
-                    height: 40,
-                  }),
-                  dropdownIndicator: (base) => ({
-                    ...base,
-                    padding: 4,
-                    color: "#64748b",
-                    transition: "color 0.2s",
-                    "&:hover": { color: "#2563eb" },
-                  }),
-                  clearIndicator: (base) => ({
-                    ...base,
-                    padding: 4,
-                    color: "#64748b",
-                    "&:hover": { color: "#ef4444" },
-                  }),
-                  input: (base) => ({
-                    ...base,
-                    margin: 0,
-                    padding: 0,
-                  }),
-                  placeholder: (base) => ({
-                    ...base,
-                    color: "#94a3b8",
-                    fontSize: 12,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }),
-                }}
-              />
+            {/* Language Selector */}
+            <div style={{ minWidth: 170, maxWidth: 200 }}>
+              <div className="relative">
+                <button
+                  type="button"
+                  className="flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg bg-white shadow-sm hover:shadow-md transition-all w-full"
+                  style={{ minWidth: 150 }}
+                  onClick={() => setShowLangDropdown((v) => !v)}
+                >
+                  <ReactCountryFlag
+                    countryCode={selectedLang.countryCode}
+                    svg
+                    style={{ width: 24, height: 18, borderRadius: 3 }}
+                  />
+                  <span className="text-sm font-medium text-slate-700">
+                    {selectedLang.label}
+                  </span>
+                  <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                </button>
+                {showLangDropdown && (
+                  <div className="absolute z-50 mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-lg">
+                    {languageOptions.map((opt) => (
+                      <button
+                        key={opt.value}
+                        className={`flex items-center gap-2 w-full px-3 py-2 hover:bg-slate-100 transition-colors ${selectedLang.value === opt.value ? 'bg-slate-100' : ''}`}
+                        onClick={() => { handleLangChange(opt); setShowLangDropdown(false); }}
+                      >
+                        <ReactCountryFlag countryCode={opt.countryCode} svg style={{ width: 22, height: 16, borderRadius: 3 }} />
+                        <span className="text-sm">{opt.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
             {/* Search Button */}
             <Button
