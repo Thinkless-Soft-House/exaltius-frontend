@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { useGetTags } from "@/hooks/useGetTags";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { MegaSearch } from "@/components/ui/MegaSearch";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Search, Menu, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -10,7 +11,6 @@ import { useI18n } from "@/i18n/useI18n";
 
 const Header = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
   const [country, setCountry] = useState(() => {
     // Tenta carregar do localStorage
     const saved = localStorage.getItem("selectedCountry");
@@ -86,14 +86,7 @@ const Header = () => {
     window.dispatchEvent(new Event("storage"));
   };
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/busca?q=${encodeURIComponent(searchQuery.trim())}`);
-      setIsSearchOpen(false);
-      setSearchQuery("");
-    }
-  };
+  // Removido handleSearch e searchQuery, pois MegaSearch cuida da busca
 
 
   // Removido código antigo de countryList/countryOptions
@@ -205,26 +198,8 @@ const Header = () => {
             </Sheet>
           </div>
         </div>
-        {/* Search Bar */}
-        {isSearchOpen && (
-          <div className="pb-4 animate-fade-in">
-            <form onSubmit={handleSearch} className="max-w-md mx-auto">
-              <div className="relative">
-                <Input
-                  type="search"
-                  placeholder={
-                    t.use_search_bar || "Buscar artigos sobre finanças..."
-                  }
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border-exaltius-blue/20 focus:border-exaltius-blue focus:ring-exaltius-blue"
-                  autoFocus
-                />
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
-              </div>
-            </form>
-          </div>
-        )}
+        {/* MegaSearch flutuante */}
+        <MegaSearch open={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
       </div>
     </header>
   );

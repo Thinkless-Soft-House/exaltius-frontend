@@ -14,10 +14,12 @@ type Post = typeof blogPosts[number];
 const Post = () => {
   const { slug } = useParams<{ slug: string }>();
   const [currentPost, setCurrentPost] = useState<Post | null>(null);
-  const [nextPosts, setNextPosts] = useState<Post[]>([]);
+  const [timelinePosts, setTimelinePosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingNext, setLoadingNext] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
+  const categories = Array.from(new Set(blogPosts.map(post => post.category)));
 
   // Usar blogPosts.ts como fonte de dados
 
@@ -25,14 +27,27 @@ const Post = () => {
     return blogPosts.find(post => post.slug === targetSlug);
   };
 
-  const getNextPosts = useCallback((currentPostDate: string, page: number, limit: number = 1): Post[] => {
-    const currentDate = new Date(currentPostDate);
-    const olderPosts = blogPosts
-      .filter(post => new Date(post.publishedAt) < currentDate)
-      .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+  // Função para buscar posts por categoria e página
+  const getPostsByCategory = useCallback((category: string, page: number, limit: number = 3): Post[] => {
+    const filtered = blogPosts.filter(post => post.category === category);
     const startIndex = (page - 1) * limit;
-    return olderPosts.slice(startIndex, startIndex + limit);
+    return filtered.slice(startIndex, startIndex + limit);
   }, []);
+
+  // Função para buscar posts de múltiplas categorias em sequência
+  const getNextTimelinePosts = useCallback((page: number, limit: number = 3): Post[] => {
+    let posts: Post[] = [];
+    let catIdx = currentCategoryIndex;
+    while (posts.length < limit && catIdx < categories.length) {
+      const catPosts = getPostsByCategory(categories[catIdx], page, limit - posts.length);
+      posts = posts.concat(catPosts);
+      if (catPosts.length < (limit - posts.length)) {
+        catIdx++;
+        page = 1;
+      }
+    }
+    return posts;
+  }, [categories, currentCategoryIndex, getPostsByCategory]);
 
   useEffect(() => {
     if (slug) {
@@ -40,17 +55,58 @@ const Post = () => {
       const post = findPostBySlug(slug);
       if (post) {
         setCurrentPost(post);
-        setNextPosts([]);
+        setTimelinePosts([post]);
         setCurrentPage(1);
+        setCurrentCategoryIndex(categories.indexOf(post.category));
       }
       setLoading(false);
     }
-  }, [slug, getNextPosts]);
+  }, [slug, categories]);
 
 
-  // Infinite scroll removido
-
-  // Infinite scroll removido
+  // Infinite scroll da timeline
+  useEffect(() => {
+    const handleScroll = () => {
+      if (
+        window.innerHeight + window.scrollY >= document.body.offsetHeight - 200 &&
+        !loadingNext
+      ) {
+        setLoadingNext(true);
+        setTimeout(() => {
+          let nextPage = currentPage + 1;
+          let catIdx = currentCategoryIndex;
+          let newPosts: Post[] = [];
+          // Busca posts até encontrar algum disponível
+          while (newPosts.length === 0 && catIdx < categories.length) {
+            newPosts = getPostsByCategory(categories[catIdx], nextPage);
+            if (newPosts.length === 0) {
+              catIdx++;
+              nextPage = 1;
+            }
+          }
+          if (catIdx !== currentCategoryIndex) {
+            setCurrentCategoryIndex(catIdx);
+            setCurrentPage(nextPage);
+          } else {
+            setCurrentPage(nextPage);
+          }
+          if (newPosts.length > 0) {
+            setTimelinePosts(prev => [...prev, ...newPosts]);
+          }
+          setLoadingNext(false);
+        }, 500);
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [currentPage, loadingNext, currentCategoryIndex, categories, getPostsByCategory]);
+  // Função para exibir nome amigável da categoria
+  const formatCategoryName = (category: string) => {
+    // Exemplo: "financas-pessoais" => "Finanças Pessoais"
+    return category
+      .replace(/-/g, ' ')
+      .replace(/\b\w/g, l => l.toUpperCase());
+  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('pt-BR', {
@@ -280,7 +336,27 @@ const Post = () => {
               </div>
             </article>
 
-            {/* Infinite scroll removido: só exibe o post atual */}
+            {/* Timeline com infinite scroll */}
+            <section className="mt-12">
+              {timelinePosts.map((post, idx) => (
+                <article key={post.id + '-' + idx} className="mb-16 border-b pb-8">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Badge className="bg-exaltius-blue text-white text-sm px-3 py-1">
+                      {formatCategoryName(post.category)}
+                    </Badge>
+                  </div>
+                  <h2 className="text-2xl font-bold text-exaltius-blue mb-2">{post.title}</h2>
+                  <div className="text-slate-600 text-sm mb-4">{formatDate(post.publishedAt)} • {post.readTime} min de leitura</div>
+                  <div className="prose prose-lg max-w-none mb-4" dangerouslySetInnerHTML={{ __html: post.excerpt || post.content }} />
+                  <Button asChild variant="outline" className="mt-2">
+                    <a href={`/post/${post.slug}`}>Ver artigo completo</a>
+                  </Button>
+                </article>
+              ))}
+              {loadingNext && (
+                <div className="text-center py-4 text-slate-400">Carregando mais posts...</div>
+              )}
+            </section>
           </div>
 
           {/* Sidebar */}

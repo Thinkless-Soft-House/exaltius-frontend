@@ -26,32 +26,7 @@ const Sidebar = ({ currentPostId, category, blockPages, index }: SidebarProps) =
   const [sidebarPage, setSidebarPage] = useState(1); // controla quantos blocos da sidebar são exibidos
   const sidebarRef = useRef<HTMLDivElement>(null);
   const [maxBlocks, setMaxBlocks] = useState<number | null>(null);
-
-  // Detecta se está dentro do post pela presença de currentPostId
-  const isInsidePost = !!currentPostId;
-
-  // Sincroniza altura da sidebar com o conteúdo principal apenas dentro do post
-  useEffect(() => {
-    if (!isInsidePost) return;
-    // Aguarda renderização
-    setTimeout(() => {
-      const main = document.querySelector('.flex-1');
-      const sidebar = sidebarRef.current;
-      if (main && sidebar) {
-        const mainHeight = (main as HTMLElement).offsetHeight;
-        const blockEls = sidebar.querySelectorAll('aside > div');
-        let total = 0;
-        let blocksToShow = 1;
-        for (let i = 0; i < blockEls.length; i++) {
-          total += (blockEls[i] as HTMLElement).offsetHeight;
-          if (total > mainHeight) break;
-          blocksToShow = i + 1;
-        }
-        setMaxBlocks(blocksToShow);
-      }
-    }, 100);
-  }, [isInsidePost, sidebarPage]);
-
+  const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
   // Mock data - In a real app, this would come from an API
   const mockPopularPosts: Post[] = [
     {
@@ -109,6 +84,35 @@ const Sidebar = ({ currentPostId, category, blockPages, index }: SidebarProps) =
     readTime: 8,
     views: 2100,
   };
+  const allCategories = Array.from(new Set([...mockPopularPosts, ...mockRecentPosts, mockFeaturedPost].map(post => post.category)));
+
+  // Detecta se está dentro do post pela presença de currentPostId
+  const isInsidePost = !!currentPostId;
+
+  // Sincroniza altura da sidebar com o conteúdo principal apenas dentro do post
+  useEffect(() => {
+    if (!isInsidePost) return;
+    // Aguarda renderização
+    setTimeout(() => {
+      const main = document.querySelector('.flex-1');
+      const sidebar = sidebarRef.current;
+      if (main && sidebar) {
+        const mainHeight = (main as HTMLElement).offsetHeight;
+        const blockEls = sidebar.querySelectorAll('aside > div');
+        let total = 0;
+        let blocksToShow = 1;
+        for (let i = 0; i < blockEls.length; i++) {
+          total += (blockEls[i] as HTMLElement).offsetHeight;
+          if (total > mainHeight) break;
+          blocksToShow = i + 1;
+        }
+        setMaxBlocks(blocksToShow);
+      }
+    }, 100);
+  }, [isInsidePost, sidebarPage]);
+
+  // Mock data - In a real app, this would come from an API
+  // ...existing code...
   const mockQuickTips = [
     "Revise seus gastos semanais toda segunda-feira.",
     "Use o débito automático para não atrasar contas.",
@@ -144,7 +148,7 @@ const Sidebar = ({ currentPostId, category, blockPages, index }: SidebarProps) =
 
 
 
-  // Scroll infinito sincronizado com a janela
+  // Scroll infinito sincronizado com a janela, alternando categorias ao acabar os posts
   useEffect(() => {
     const handleScroll = () => {
       if (
@@ -156,6 +160,14 @@ const Sidebar = ({ currentPostId, category, blockPages, index }: SidebarProps) =
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  useEffect(() => {
+    // Se acabar os posts da categoria atual, inicia próxima categoria
+    if (sidebarPage > mockPopularPosts.length && currentCategoryIndex < allCategories.length - 1) {
+      setCurrentCategoryIndex(currentCategoryIndex + 1);
+      setSidebarPage(1);
+    }
+  }, [sidebarPage, currentCategoryIndex, allCategories.length]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("pt-BR", {
@@ -340,6 +352,7 @@ const Sidebar = ({ currentPostId, category, blockPages, index }: SidebarProps) =
   // Pré-carrega os dados dos blocos da sidebar
   // Aumenta o limite para garantir conteúdo ao scrollar indefinidamente
   const MAX_BLOCKS = 500;
+  // Gera blocos de acordo com a categoria atual
   const sidebarBlocksData = Array.from({ length: MAX_BLOCKS }).map((_, blockIndex) => {
     const quickTip = mockQuickTips[blockIndex % mockQuickTips.length];
     const financeQuote = mockFinanceQuotes[blockIndex % mockFinanceQuotes.length];
@@ -347,11 +360,9 @@ const Sidebar = ({ currentPostId, category, blockPages, index }: SidebarProps) =
     const essentialGuide = mockEssentialGuide;
     const weeklyGoal = mockWeeklyGoals[blockIndex % mockWeeklyGoals.length];
     const featuredPost = mockFeaturedPost;
-    // Junta posts populares e recentes para simular variedade
-    const postsMap = new Map();
-    mockPopularPosts.forEach((p) => postsMap.set(p.id, p));
-    mockRecentPosts.forEach((p) => postsMap.set(p.id, p));
-    const posts = Array.from(postsMap.values());
+    // Filtra posts pela categoria atual
+    const currentCategory = allCategories[currentCategoryIndex];
+    const posts = [...mockPopularPosts, ...mockRecentPosts, mockFeaturedPost].filter(p => p.category === currentCategory);
     return {
       blockIndex,
       quickTip,
