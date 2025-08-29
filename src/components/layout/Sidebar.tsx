@@ -1,8 +1,9 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Eye, Calendar, Lightbulb, Star, Quote, Info, BookOpen, Target, Bell, Mail } from "./lucide-icons";
+import { useGetPosts } from "@/hooks/useGetPosts";
 
 interface SidebarProps {
   currentPostId?: string;
@@ -25,66 +26,70 @@ interface Post {
 const Sidebar = ({ currentPostId, category, blockPages, index }: SidebarProps) => {
   const [sidebarPage, setSidebarPage] = useState(1); // controla quantos blocos da sidebar são exibidos
   const sidebarRef = useRef<HTMLDivElement>(null);
-  const [maxBlocks, setMaxBlocks] = useState<number | null>(null);
   const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
-  // Mock data - In a real app, this would come from an API
-  const mockPopularPosts: Post[] = [
-    {
-      id: "4",
-      title: "Tesouro Direto: Guia Completo 2024",
-      slug: "tesouro-direto-guia-completo-2024",
-      excerpt:
-        "Tudo que você precisa saber sobre o Tesouro Direto para investir com segurança.",
-      category: "Investimentos",
-      publishedAt: "2024-01-08",
-      readTime: 12,
-      views: 2200,
-    },
-    {
-      id: "5",
-      title: "Como Sair do Vermelho em 90 Dias",
-      slug: "como-sair-do-vermelho-em-90-dias",
-      excerpt:
-        "Estratégias práticas para quitar dívidas e organizar suas finanças rapidamente.",
-      category: "Finanças Pessoais",
-      publishedAt: "2024-01-05",
-      readTime: 7,
-      views: 1800,
-    },
-  ];
-  const mockRecentPosts: Post[] = [
-    {
-      id: "6",
-      title: "Como Declarar Imposto de Renda 2025",
-      slug: "como-declarar-imposto-de-renda-2025",
-      excerpt: "Passo a passo para não errar na declaração deste ano.",
-      category: "Impostos",
-      publishedAt: "2024-07-20",
-      readTime: 4,
-      views: 900,
-    },
-    {
-      id: "7",
-      title: "ETF: O que é e como investir?",
-      slug: "etf-o-que-e-como-investir",
-      excerpt: "Entenda o funcionamento dos ETFs e como incluí-los na sua carteira.",
-      category: "Investimentos",
-      publishedAt: "2024-07-18",
-      readTime: 6,
-      views: 1100,
-    },
-  ];
-  const mockFeaturedPost: Post = {
-    id: "8",
-    title: "Ações para Ficar de Olho em 2025",
-    slug: "acoes-para-ficar-de-olho-2025",
-    excerpt: "Veja as empresas com maior potencial de valorização no próximo ano.",
-    category: "Investimentos",
-    publishedAt: "2024-07-10",
-    readTime: 8,
-    views: 2100,
-  };
-  const allCategories = Array.from(new Set([...mockPopularPosts, ...mockRecentPosts, mockFeaturedPost].map(post => post.category)));
+  // Dicas e citações estáticas (mantidas localmente) - memoizadas para estabilidade
+  const { mockQuickTips, mockFinanceQuotes, mockWeeklyGoals } = React.useMemo(() => ({
+    mockQuickTips: [
+      "Revise seus gastos semanais toda segunda-feira.",
+      "Use o débito automático para não atrasar contas.",
+      "Invista primeiro, gaste depois.",
+      "Tenha uma reserva de emergência de pelo menos 6 meses.",
+    ],
+    mockFinanceQuotes: [
+      "'O dinheiro é um excelente servo, mas um péssimo mestre.' — Francis Bacon",
+      "'Não economize o que sobra depois de gastar, gaste o que sobra depois de economizar.' — Warren Buffett",
+      "'Investir em conhecimento rende sempre os melhores juros.' — Benjamin Franklin",
+    ],
+    mockWeeklyGoals: [
+      "Defina um objetivo financeiro para esta semana.",
+      "Economize R$ 50 até domingo.",
+      "Leia um artigo sobre investimentos por dia.",
+      "Converse sobre finanças com um amigo.",
+    ],
+  }), []);
+
+  // Posts reais vindos do backend
+  const { getRecent } = useGetPosts();
+  const [popularPosts, setPopularPosts] = useState<Post[]>([]);
+  const [recentPosts, setRecentPosts] = useState<Post[]>([]);
+  const [featuredPost, setFeaturedPost] = useState<Post | null>(null);
+  const [randomPosts, setRandomPosts] = useState<Post[]>([]);
+  const [essentialGuide, setEssentialGuide] = useState<Post | null>(null);
+
+  const shuffle = <T,>(arr: T[]) => arr.slice().sort(() => Math.random() - 0.5);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await getRecent('pt', 20);
+        const items = res?.data?.items ?? [];
+        if (!mounted || !items.length) return;
+        // Map to local Post shape
+        const mapped = items.map((i) => ({
+          id: i.id,
+          title: i.title,
+          slug: i.slug,
+          excerpt: i.excerpt,
+          category: i.category,
+          publishedAt: i.publishedAt,
+          readTime: i.readTime,
+          views: i.views,
+        } as Post));
+
+        setFeaturedPost(mapped[0] ?? null);
+        setPopularPosts(mapped.slice(1, 3));
+        setRecentPosts(mapped.slice(3, 8));
+        setRandomPosts(shuffle(mapped).slice(0, 4));
+        setEssentialGuide(mapped[8] ?? mapped[1] ?? null);
+      } catch (e) {
+        // silenciar; sidebar continuará com blocos vazios
+      }
+    })();
+    return () => { mounted = false; };
+  }, [getRecent]);
+
+  const allCategories = Array.from(new Set([...popularPosts, ...recentPosts, ...(featuredPost ? [featuredPost] : [])].map(post => post.category)));
 
   // Detecta se está dentro do post pela presença de currentPostId
   const isInsidePost = !!currentPostId;
@@ -93,81 +98,38 @@ const Sidebar = ({ currentPostId, category, blockPages, index }: SidebarProps) =
   useEffect(() => {
     if (!isInsidePost) return;
     // Aguarda renderização
-    setTimeout(() => {
+    const calculateInitialBlocks = () => {
       const main = document.querySelector('.flex-1');
       const sidebar = sidebarRef.current;
       if (main && sidebar) {
         const mainHeight = (main as HTMLElement).offsetHeight;
-        const blockEls = sidebar.querySelectorAll('aside > div');
+        const blockEls = Array.from(sidebar.children) as HTMLElement[];
         let total = 0;
         let blocksToShow = 1;
         for (let i = 0; i < blockEls.length; i++) {
-          total += (blockEls[i] as HTMLElement).offsetHeight;
+          total += blockEls[i].offsetHeight;
           if (total > mainHeight) break;
           blocksToShow = i + 1;
         }
-        setMaxBlocks(blocksToShow);
-      }
-    }, 100);
-  }, [isInsidePost, sidebarPage]);
-
-  // Mock data - In a real app, this would come from an API
-  // ...existing code...
-  const mockQuickTips = [
-    "Revise seus gastos semanais toda segunda-feira.",
-    "Use o débito automático para não atrasar contas.",
-    "Invista primeiro, gaste depois.",
-    "Tenha uma reserva de emergência de pelo menos 6 meses.",
-  ];
-  const mockFinanceQuotes = [
-    "'O dinheiro é um excelente servo, mas um péssimo mestre.' — Francis Bacon",
-    "'Não economize o que sobra depois de gastar, gaste o que sobra depois de economizar.' — Warren Buffett",
-    "'Investir em conhecimento rende sempre os melhores juros.' — Benjamin Franklin",
-  ];
-  const mockRandomPosts: Post[] = [
-    ...mockPopularPosts,
-    ...mockRecentPosts,
-    mockFeaturedPost,
-  ];
-  const mockEssentialGuide: Post = {
-    id: "9",
-    title: "Guia Essencial: Como Investir do Zero",
-    slug: "guia-essencial-como-investir-do-zero",
-    excerpt: "Tudo que você precisa saber para começar a investir com segurança.",
-    category: "Investimentos",
-    publishedAt: "2024-06-01",
-    readTime: 15,
-    views: 3000,
-  };
-  const mockWeeklyGoals = [
-    "Defina um objetivo financeiro para esta semana.",
-    "Economize R$ 50 até domingo.",
-    "Leia um artigo sobre investimentos por dia.",
-    "Converse sobre finanças com um amigo.",
-  ];
-
-
-
-  // Scroll infinito sincronizado com a janela, alternando categorias ao acabar os posts
-  useEffect(() => {
-    const handleScroll = () => {
-      if (
-        window.scrollY + window.innerHeight >= document.body.offsetHeight - 200
-      ) {
-        setSidebarPage((prev) => prev + 1);
+        // Inicializa sidebarPage somente se ainda estiver no valor inicial (1)
+        setSidebarPage((prev) => (prev === 1 ? Math.max(prev, blocksToShow) : prev));
       }
     };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
-  useEffect(() => {
-    // Se acabar os posts da categoria atual, inicia próxima categoria
-    if (sidebarPage > mockPopularPosts.length && currentCategoryIndex < allCategories.length - 1) {
-      setCurrentCategoryIndex(currentCategoryIndex + 1);
-      setSidebarPage(1);
-    }
-  }, [sidebarPage, currentCategoryIndex, allCategories.length]);
+    const t = setTimeout(calculateInitialBlocks, 100);
+    // Recalcula se a janela for redimensionada
+    window.addEventListener('resize', calculateInitialBlocks);
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener('resize', calculateInitialBlocks);
+    };
+  }, [isInsidePost, sidebarPage]);
+
+  // mock data is memoized above
+
+
+
+
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("pt-BR", {
@@ -350,19 +312,17 @@ const Sidebar = ({ currentPostId, category, blockPages, index }: SidebarProps) =
   );
 
   // Pré-carrega os dados dos blocos da sidebar
-  // Aumenta o limite para garantir conteúdo ao scrollar indefinidamente
-  const MAX_BLOCKS = 500;
-  // Gera blocos de acordo com a categoria atual
-  const sidebarBlocksData = Array.from({ length: MAX_BLOCKS }).map((_, blockIndex) => {
+  // Reduzido para evitar custo alto de construção e memória
+  const MAX_BLOCKS = 20;
+  // Gera blocos de acordo com a categoria atual (memoizado)
+  const sidebarBlocksData = useMemo(() => Array.from({ length: MAX_BLOCKS }).map((_, blockIndex) => {
     const quickTip = mockQuickTips[blockIndex % mockQuickTips.length];
     const financeQuote = mockFinanceQuotes[blockIndex % mockFinanceQuotes.length];
-    const randomPost = mockRandomPosts[(blockIndex + 1) % mockRandomPosts.length];
-    const essentialGuide = mockEssentialGuide;
+    const randomPost = randomPosts.length ? randomPosts[(blockIndex + 1) % randomPosts.length] : undefined;
     const weeklyGoal = mockWeeklyGoals[blockIndex % mockWeeklyGoals.length];
-    const featuredPost = mockFeaturedPost;
     // Filtra posts pela categoria atual
     const currentCategory = allCategories[currentCategoryIndex];
-    const posts = [...mockPopularPosts, ...mockRecentPosts, mockFeaturedPost].filter(p => p.category === currentCategory);
+    const posts = [...popularPosts, ...recentPosts, ...(featuredPost ? [featuredPost] : [])].filter(p => p.category === currentCategory);
     return {
       blockIndex,
       quickTip,
@@ -373,7 +333,7 @@ const Sidebar = ({ currentPostId, category, blockPages, index }: SidebarProps) =
       featuredPost,
       posts,
     };
-  });
+  }), [currentCategoryIndex, allCategories, mockQuickTips, mockFinanceQuotes, randomPosts, popularPosts, recentPosts, featuredPost, essentialGuide, mockWeeklyGoals]);
 
   // Função para renderizar um bloco da sidebar com base nos dados pré-carregados
   const renderSidebarBlocks = (blockIndex: number) => {
@@ -421,11 +381,66 @@ const Sidebar = ({ currentPostId, category, blockPages, index }: SidebarProps) =
     });
   };
 
+  // Scroll infinito sincronizado com a janela, incrementa blocos em lote e usa
+  // requestAnimationFrame para evitar many reflows (throttle simples)
+  const BLOCK_INCREMENT = 5;
+  useEffect(() => {
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const sidebar = sidebarRef.current;
+        let shouldLoad = false;
+
+        if (sidebar && sidebar.children.length > 0) {
+          // pega o último bloco visível na sidebar
+          const blocks = Array.from(sidebar.children) as HTMLElement[];
+          const last = blocks[blocks.length - 1];
+          if (last) {
+            const rect = last.getBoundingClientRect();
+            // se a parte superior do último bloco estiver dentro da janela + margem, carregue mais
+            if (rect.top < window.innerHeight + 400) {
+              shouldLoad = true;
+            }
+          }
+        } else {
+          // fallback para comportamento anterior (quando sidebar não está disponível)
+          if (window.scrollY + window.innerHeight >= document.body.offsetHeight - 200) {
+            shouldLoad = true;
+          }
+        }
+
+        if (shouldLoad) {
+          setSidebarPage((prev) => Math.min(prev + BLOCK_INCREMENT, sidebarBlocksData.length));
+        }
+
+        ticking = false;
+      });
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [sidebarBlocksData.length]);
+
+  useEffect(() => {
+    // Se o último bloco renderizado não contiver posts, passamos para a próxima
+    // categoria e reiniciamos a paginação. Isso evita comparar tamanhos de
+    // listas fixas e lida dinamicamente com categorias vazias.
+    if (!sidebarBlocksData || sidebarBlocksData.length === 0) return;
+    const lastIndex = Math.min(Math.max(sidebarPage - 1, 0), sidebarBlocksData.length - 1);
+    const lastBlock = sidebarBlocksData[lastIndex];
+    const postsCount = lastBlock?.posts?.length ?? 0;
+    if (postsCount === 0 && allCategories.length > 1) {
+      setCurrentCategoryIndex((prev) => (prev + 1) % allCategories.length);
+      setSidebarPage(1);
+    }
+  }, [sidebarPage, sidebarBlocksData, allCategories.length]);
+
   // Renderiza múltiplos blocos da sidebar, um para cada página
   // Garante que sempre haverá conteúdo ao scrollar
   return (
     <aside className="w-full lg:w-80 space-y-6" ref={sidebarRef}>
-      {Array.from({ length: Math.min(isInsidePost && maxBlocks ? maxBlocks : sidebarPage, sidebarBlocksData.length) }).map((_, blockIndex) => (
+      {Array.from({ length: Math.min(sidebarPage, sidebarBlocksData.length) }).map((_, blockIndex) => (
         <div key={blockIndex}>
           {renderSidebarBlocks(blockIndex)}
         </div>

@@ -1,370 +1,204 @@
-import { useState, useEffect, useCallback } from "react";
-import { useParams } from "react-router-dom";
+import React, { useEffect, useState, useRef, useCallback } from "react";
+import { useParams, Link } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import Sidebar from "@/components/layout/Sidebar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Calendar, Clock, Eye, User, Share2, Facebook, Twitter, Linkedin, Link2, Send, Copy, X, MessageCircle } from "lucide-react";
-import { toast } from "@/hooks/use-toast";
-import React, { useRef } from "react";
-import { blogPosts } from "@/data/blogPosts";
+import { useGetPosts } from "@/hooks/useGetPosts";
+import { BlogPost } from "@/lib/normalizePost";
 
-type Post = typeof blogPosts[number];
+// Tipos mínimos locais para evitar 'any' e satisfazer o linter.
+type Tag = { id: number | string; name?: string };
+type PostTag = { id: number | string; tag?: Tag; tagName?: string };
+type Post = { id: number | string; title: string; content: string; category?: string; postTags?: PostTag[]; slug?: string };
 
-const Post = () => {
+const PostPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
-  const [currentPost, setCurrentPost] = useState<Post | null>(null);
-  const [timelinePosts, setTimelinePosts] = useState<Post[]>([]);
+  const { getBySlug, getRecent } = useGetPosts();
+  const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
-  const [loadingNext, setLoadingNext] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
-  const categories = Array.from(new Set(blogPosts.map(post => post.category)));
-
-  // Usar blogPosts.ts como fonte de dados
-
-  const findPostBySlug = (targetSlug: string): Post | undefined => {
-    return blogPosts.find(post => post.slug === targetSlug);
-  };
-
-  // Função para buscar posts por categoria e página
-  const getPostsByCategory = useCallback((category: string, page: number, limit: number = 3): Post[] => {
-    const filtered = blogPosts.filter(post => post.category === category);
-    const startIndex = (page - 1) * limit;
-    return filtered.slice(startIndex, startIndex + limit);
-  }, []);
-
-  // Função para buscar posts de múltiplas categorias em sequência
-  const getNextTimelinePosts = useCallback((page: number, limit: number = 3): Post[] => {
-    let posts: Post[] = [];
-    let catIdx = currentCategoryIndex;
-    while (posts.length < limit && catIdx < categories.length) {
-      const catPosts = getPostsByCategory(categories[catIdx], page, limit - posts.length);
-      posts = posts.concat(catPosts);
-      if (catPosts.length < (limit - posts.length)) {
-        catIdx++;
-        page = 1;
-      }
-    }
-    return posts;
-  }, [categories, currentCategoryIndex, getPostsByCategory]);
+  // posts carregados na página (post principal + posts adicionais carregados pelo scroll)
+  const [loadedPosts, setLoadedPosts] = useState<Post[]>([]);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if (slug) {
+    let mounted = true;
+    (async () => {
+      if (!slug) return;
       setLoading(true);
-      const post = findPostBySlug(slug);
-      if (post) {
-        setCurrentPost(post);
-        setTimelinePosts([post]);
-        setCurrentPage(1);
-        setCurrentCategoryIndex(categories.indexOf(post.category));
+      try {
+        const res = await getBySlug(slug, "pt");
+        const data = res?.data ?? null;
+        if (mounted && data) {
+          setPost(data);
+          // inicializa lista de posts carregados com o post principal
+          setLoadedPosts([data]);
+        }
+      } catch (e) {
+        // on error, leave post as null
+      } finally {
+        if (mounted) setLoading(false);
       }
-      setLoading(false);
-    }
-  }, [slug, categories]);
-
-
-  // Infinite scroll da timeline
-  useEffect(() => {
-    const handleScroll = () => {
-      if (
-        window.innerHeight + window.scrollY >= document.body.offsetHeight - 200 &&
-        !loadingNext
-      ) {
-        setLoadingNext(true);
-        setTimeout(() => {
-          let nextPage = currentPage + 1;
-          let catIdx = currentCategoryIndex;
-          let newPosts: Post[] = [];
-          // Busca posts até encontrar algum disponível
-          while (newPosts.length === 0 && catIdx < categories.length) {
-            newPosts = getPostsByCategory(categories[catIdx], nextPage);
-            if (newPosts.length === 0) {
-              catIdx++;
-              nextPage = 1;
-            }
-          }
-          if (catIdx !== currentCategoryIndex) {
-            setCurrentCategoryIndex(catIdx);
-            setCurrentPage(nextPage);
-          } else {
-            setCurrentPage(nextPage);
-          }
-          if (newPosts.length > 0) {
-            setTimelinePosts(prev => [...prev, ...newPosts]);
-          }
-          setLoadingNext(false);
-        }, 500);
-      }
+    })();
+    return () => {
+      mounted = false;
     };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [currentPage, loadingNext, currentCategoryIndex, categories, getPostsByCategory]);
-  // Função para exibir nome amigável da categoria
-  const formatCategoryName = (category: string) => {
-    // Exemplo: "financas-pessoais" => "Finanças Pessoais"
-    return category
-      .replace(/-/g, ' ')
-      .replace(/\b\w/g, l => l.toUpperCase());
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric'
-    });
-  };
-
-  const sharePost = (platform: string) => {
-    const url = window.location.href;
-    const title = currentPost?.title || '';
-
-    let shareUrl = '';
-
-    switch (platform) {
-      case 'facebook':
-        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(title)}`;
-        break;
-      case 'twitter':
-        shareUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`;
-        break;
-      case 'linkedin':
-        shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
-        break;
-      case 'copy':
-        navigator.clipboard.writeText(url);
-        toast({
-          title: "Link copiado!",
-          description: "O link do artigo foi copiado para a área de transferência.",
-        });
+  }, [slug, getBySlug]);
+  // Busca mais posts quando o sentinel entra em view (infinite scroll)
+  const fetchMorePosts = useCallback(async () => {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    try {
+      // Busca candidatos recentes (lista maior para dar margem)
+      const res = await getRecent("pt", 20);
+      const items = res?.data?.items ?? [];
+      // filtra os que já foram carregados
+      const known = new Set(loadedPosts.map((p) => String(p.slug)));
+      const candidates = items.filter((i: BlogPost) => !known.has(i.slug));
+      if (!candidates || candidates.length === 0) {
+        setHasMore(false);
         return;
+      }
+      const BATCH = 2; // quantos carregar por gatilho
+      const pick = candidates.slice(0, BATCH);
+      const fulls: Post[] = [];
+      for (const c of pick) {
+        try {
+          const r = await getBySlug(c.slug, "pt");
+          const d = r?.data;
+          if (d) fulls.push(d);
+        } catch (e) {
+          // se falhar um, continua com o próximo
+        }
+      }
+      if (fulls.length === 0) {
+        setHasMore(false);
+        return;
+      }
+      setLoadedPosts((prev) => [...prev, ...fulls]);
+    } finally {
+      setLoadingMore(false);
     }
+  }, [getRecent, getBySlug, loadedPosts, loadingMore, hasMore]);
 
-    if (shareUrl) {
-      window.open(shareUrl, '_blank', 'width=600,height=400');
-    }
-  };
-
-  // Hooks para o botão de compartilhar estilo G1
-  const [shareOpen, setShareOpen] = useState(false);
-  const shareRef = useRef<HTMLDivElement>(null);
-  const [copied, setCopied] = useState(false);
-
-  // Fecha popover ao clicar fora
+  // IntersectionObserver para acionar carregamento quando o sentinel aparecer
   useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (shareRef.current && !shareRef.current.contains(e.target as Node)) {
-        setShareOpen(false);
-      }
-    }
-    if (shareOpen) {
-      document.addEventListener('mousedown', handleClick);
-    } else {
-      document.removeEventListener('mousedown', handleClick);
-    }
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, [shareOpen]);
+    if (!sentinelRef.current) return;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          fetchMorePosts();
+        }
+      },
+      { rootMargin: "600px" }
+    );
+    obs.observe(sentinelRef.current);
+    return () => obs.disconnect();
+  }, [fetchMorePosts]);
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(window.location.href);
-    setCopied(true);
-    toast({ title: "Link copiado!", description: "O link do artigo foi copiado para a área de transferência." });
-    setTimeout(() => setCopied(false), 1500);
-    setShareOpen(false);
-  };
-
-  const shareOptions = [
-    {
-      label: 'Facebook',
-      icon: <Facebook className="w-5 h-5 text-blue-600" />, onClick: () => {
-        const url = window.location.href;
-        const title = currentPost?.title || '';
-        const shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(title)}`;
-        window.open(shareUrl, '_blank', 'width=600,height=400');
-        setShareOpen(false);
-      }
-    },
-    {
-      label: 'Twitter',
-      icon: <Twitter className="w-5 h-5 text-sky-500" />, onClick: () => {
-        const url = window.location.href;
-        const title = currentPost?.title || '';
-        const shareUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`;
-        window.open(shareUrl, '_blank', 'width=600,height=400');
-        setShareOpen(false);
-      }
-    },
-    {
-      label: 'WhatsApp',
-      icon: <MessageCircle className="w-5 h-5 text-green-500" />, onClick: () => {
-        const url = window.location.href;
-        const title = currentPost?.title || '';
-        const shareUrl = `https://wa.me/?text=${encodeURIComponent(title + ' ' + url)}`;
-        window.open(shareUrl, '_blank', 'width=600,height=400');
-        setShareOpen(false);
-      }
-    },
-    {
-      label: copied ? 'Copiado!' : 'Copiar link',
-      icon: copied ? <Copy className="w-5 h-5 text-emerald-600" /> : <Link2 className="w-5 h-5 text-slate-600" />, onClick: handleCopy
-    },
-  ];
-
-  if (loading) {
+  if (loading)
     return (
       <Layout>
-        <div className="container mx-auto px-4 lg:px-8 py-16 text-center">
-          <div className="animate-pulse">
-            <div className="h-8 bg-slate-200 rounded w-3/4 mx-auto mb-4"></div>
-            <div className="h-4 bg-slate-200 rounded w-1/2 mx-auto"></div>
-          </div>
-        </div>
+        <div className="container mx-auto px-4 lg:px-8 py-16 text-center">Carregando...</div>
       </Layout>
     );
-  }
 
-  if (!currentPost) {
+  if (!post)
     return (
       <Layout>
-        <div className="container mx-auto px-4 lg:px-8 py-16 text-center">
-          <h1 className="text-4xl font-bold text-slate-900 mb-4">Artigo não encontrado</h1>
-          <p className="text-slate-600">O artigo que você está procurando não existe.</p>
-        </div>
+        <div className="container mx-auto px-4 lg:px-8 py-16 text-center">Artigo não encontrado</div>
       </Layout>
     );
+  // Defensive content handling: guarantee string before injecting HTML
+  const safeContent = typeof post.content === 'string' ? post.content : String(post.content ?? '');
+  if (typeof post.content !== 'string') {
+    // Ajuda a detectar respostas do backend com formato inesperado
+    console.warn('[PostPage] post.content is not a string, using fallback safeContent', { content: post.content });
   }
 
   return (
     <Layout>
       <div className="container mx-auto px-4 lg:px-8 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Main Content */}
           <div className="flex-1">
-            {/* Current Post */}
             <article className="mb-16">
-              {/* Featured Image */}
-              <div className="relative mb-8 rounded-lg overflow-hidden">
-                <img
-                  src={currentPost.imageUrl || currentPost.featuredImage || '/placeholder.svg'}
-                  alt={currentPost.title}
-                  className="w-full h-64 md:h-96 object-cover"
-                />
-                <div className="absolute top-6 left-6">
-                  <Badge className="bg-exaltius-blue text-white text-sm px-3 py-1">
-                    {currentPost.category}
-                  </Badge>
-                </div>
-              </div>
+              <h1 className="text-3xl lg:text-5xl font-bold text-exaltius-blue mb-6 leading-tight">{post.title}</h1>
+              <div className="post-content prose prose-lg max-w-none" dangerouslySetInnerHTML={{ __html: safeContent }} />
 
-              {/* Post Header */}
-              <header className="mb-8">
-                <h1 className="text-3xl lg:text-5xl font-bold text-exaltius-blue mb-6 leading-tight">
-                  {currentPost.title}
-                </h1>
+              {/* Renderiza posts adicionais carregados pelo infinite scroll */}
+              {loadedPosts.length > 1 && (
+                <section className="mt-12">
+                  {loadedPosts.slice(1).map((lp) => {
+                    const lpContent = typeof lp.content === 'string' ? lp.content : String(lp.content ?? '');
 
-                <div className="flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-slate-200">
-                  <div className="flex items-center space-x-6 text-sm text-slate-600">
-                    <div className="flex items-center space-x-2">
-                      <User className="h-4 w-4" />
-                      <span className="font-medium">{currentPost.author}</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Calendar className="h-4 w-4" />
-                      <span>{formatDate(currentPost.publishedAt)}</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Clock className="h-4 w-4" />
-                      <span>{typeof currentPost.readTime === 'number' ? `${currentPost.readTime} min de leitura` : ''}</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Eye className="h-4 w-4" />
-                      <span>{typeof currentPost.views === 'number' ? `${currentPost.views.toLocaleString()} visualizações` : ''}</span>
-                    </div>
-                  </div>
-                  {/* Botão de compartilhar estilo G1 */}
-                  <div className="relative" ref={shareRef}>
-                    <button
-                      aria-label="Compartilhar"
-                      className="rounded-full bg-white border border-slate-200 shadow hover:bg-slate-100 p-3 transition-colors focus:outline-none focus:ring-2 focus:ring-exaltius-gold"
-                      onClick={() => setShareOpen((v) => !v)}
-                      title="Compartilhar"
-                    >
-                      <Share2 className="w-5 h-5 text-exaltius-blue" />
-                    </button>
-                    {shareOpen && (
-                      <div className="absolute right-0 mt-2 z-20 w-48 bg-white border border-slate-200 rounded-lg shadow-lg animate-fade-in">
-                        <button
-                          className="absolute top-2 right-2 p-1 rounded hover:bg-slate-100"
-                          onClick={() => setShareOpen(false)}
-                          aria-label="Fechar"
-                        >
-                          <X className="w-4 h-4 text-slate-400" />
-                        </button>
-                        <div className="flex flex-col gap-2 p-4">
-                          {shareOptions.map(opt => (
-                            <button
-                              key={opt.label}
-                              className="flex items-center gap-2 px-3 py-2 rounded hover:bg-slate-100 text-left text-sm font-medium transition-colors"
-                              onClick={opt.onClick}
-                              tabIndex={0}
-                            >
-                              {opt.icon}
-                              {opt.label}
-                            </button>
-                          ))}
+                    // Extrai metadados de forma defensiva (nomes de campos podem variar)
+                    const lpSafe = lp as unknown as Record<string, unknown>;
+                    const category = (lpSafe['category'] as string) || (lpSafe['categoryName'] as string) || (lp.postTags && lp.postTags[0]?.tag?.name) || null;
+                    const rawDate = (lpSafe['created_at'] as string) || (lpSafe['createdAt'] as string) || (lpSafe['published_at'] as string) || (lpSafe['publishedAt'] as string) || null;
+                    const authorName = ((lpSafe['author'] as Record<string, unknown>)?.['name'] as string) || (lpSafe['authorName'] as string) || (lpSafe['author_name'] as string) || (lpSafe['author'] as string) || null;
+                    const formattedDate = rawDate ? new Date(rawDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }) : null;
+
+                    return (
+                      <article key={lp.slug ?? lp.id} className="mt-12">
+                        {/* Divisor com badge centralizado indicando novo artigo */}
+                        <div className="relative my-8">
+                          <div className="absolute left-1/2 top-0 transform -translate-x-1/2 -translate-y-1/2 bg-white px-3 text-sm font-semibold border rounded-md">Próximo artigo</div>
+                          <div className="border-t" />
                         </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </header>
 
-              {/* Post Content */}
-              <div
-                className="post-content prose prose-lg max-w-none"
-                dangerouslySetInnerHTML={{ __html: currentPost.content }}
-              />
+                        {/* Bloco de artigo: sem fundo branco/modal, apenas espaçamento e contorno leve */}
+                        <div className="mt-6 p-6 rounded-lg">
+                          {/* Metadados em chips: categoria, data, autor */}
+                          <div className="flex flex-wrap items-center gap-3 text-sm text-slate-600 mb-4">
+                            {category && <span className="px-2 py-1 bg-slate-100 rounded text-xs font-medium">{category}</span>}
+                            {formattedDate && (
+                              <span className="text-xs text-slate-500">{formattedDate}</span>
+                            )}
+                            {authorName && <span className="text-xs text-slate-500">• {authorName}</span>}
+                          </div>
 
-              {/* Ad Space After Content */}
-              <div className="bg-gradient-to-r from-slate-100 to-slate-50 border-dashed border-2 border-slate-300 rounded-lg p-8 text-center my-12">
-                <div className="text-sm text-slate-500 mb-2">Espaço Publicitário</div>
-                <div className="text-xs text-slate-400">728x90 - Leaderboard</div>
-                <div className="mt-4 p-4 bg-white/50 rounded border border-slate-200">
-                  <div className="text-xs text-slate-600">Anúncio AdSense</div>
-                </div>
-              </div>
-            </article>
-
-            {/* Timeline com infinite scroll */}
-            <section className="mt-12">
-              {timelinePosts.map((post, idx) => (
-                <article key={post.id + '-' + idx} className="mb-16 border-b pb-8">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Badge className="bg-exaltius-blue text-white text-sm px-3 py-1">
-                      {formatCategoryName(post.category)}
-                    </Badge>
-                  </div>
-                  <h2 className="text-2xl font-bold text-exaltius-blue mb-2">{post.title}</h2>
-                  <div className="text-slate-600 text-sm mb-4">{formatDate(post.publishedAt)} • {post.readTime} min de leitura</div>
-                  <div className="prose prose-lg max-w-none mb-4" dangerouslySetInnerHTML={{ __html: post.excerpt || post.content }} />
-                  <Button asChild variant="outline" className="mt-2">
-                    <a href={`/post/${post.slug}`}>Ver artigo completo</a>
-                  </Button>
-                </article>
-              ))}
-              {loadingNext && (
-                <div className="text-center py-4 text-slate-400">Carregando mais posts...</div>
+                          <h2 className="text-2xl font-semibold mb-4">{lp.title}</h2>
+                          <div className="post-content prose prose-lg max-w-none" dangerouslySetInnerHTML={{ __html: lpContent }} />
+                          {lp.postTags && lp.postTags.length > 0 && (
+                            <div className="mt-6">
+                              <h4 className="text-sm font-semibold mb-2">Tags</h4>
+                              <div className="flex flex-wrap gap-2">
+                                {lp.postTags.map((pt: PostTag) => (
+                                  <span key={pt.id} className="text-xs px-2 py-1 bg-slate-100 rounded">{pt.tag?.name ?? pt.tagName ?? 'tag'}</span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </article>
+                    );
+                  })}
+                </section>
               )}
-            </section>
-          </div>
 
-          {/* Sidebar */}
-          <Sidebar currentPostId={currentPost.id} category={currentPost.category} />
+              {/* sentinel para observar quando carregar mais posts */}
+              <div ref={sentinelRef} className="h-2" />
+              {loadingMore && (
+                <div className="mt-6 text-center text-sm text-slate-600">Carregando mais artigos...</div>
+              )}
+
+              {post.postTags && post.postTags.length > 0 && (
+                <div className="mt-6">
+                  <h4 className="text-sm font-semibold mb-2">Tags</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {post.postTags.map((pt: PostTag) => (
+                      <span key={pt.id} className="text-xs px-2 py-1 bg-slate-100 rounded">{pt.tag?.name ?? pt.tagName ?? "tag"}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </article>
+          </div>
+          <Sidebar currentPostId={String(post.id)} category={post.category} />
         </div>
       </div>
     </Layout>
   );
 };
 
-export default Post;
+export default PostPage;

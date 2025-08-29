@@ -32,6 +32,14 @@ const PostCard = ({
 }: PostCardProps) => {
   const [copied, setCopied] = useState(false);
 
+  // Defensive defaults in case some props are missing from backend/mock
+  const safeTitle = title ?? '';
+  const safeExcerpt = excerpt ?? '';
+  const safePublishedAt = publishedAt ?? new Date().toISOString();
+  const safeReadTime = typeof readTime === 'number' ? readTime : 0;
+  const safeViews = typeof views === 'number' ? views : 0;
+  const safeFeaturedImage = featuredImage ?? '';
+
   const copyToClipboard = async (slug: string) => {
     const url = `${window.location.origin}/post/${slug}`;
     try {
@@ -85,11 +93,11 @@ const PostCard = ({
               }`}
             title={title}
           >
-            {title.length > 70 ? `${title.slice(0, 67)}...` : title}
+            {(safeTitle.length > 70) ? `${safeTitle.slice(0, 67)}...` : safeTitle}
           </h2>
 
           <p className="text-slate-600 line-clamp-3 leading-relaxed" title={excerpt}>
-            {excerpt.length > 120 ? `${excerpt.slice(0, 117)}...` : excerpt}
+            {(safeExcerpt.length > 120) ? `${safeExcerpt.slice(0, 117)}...` : safeExcerpt}
           </p>
 
           {/* Meta Information */}
@@ -101,18 +109,18 @@ const PostCard = ({
               </div>
               <div className="flex items-center space-x-1">
                 <Calendar className="h-4 w-4" />
-                <span>{formatDate(publishedAt)}</span>
+                <span>{formatDate(safePublishedAt)}</span>
               </div>
             </div>
 
             <div className="flex items-center space-x-4 text-sm text-slate-500">
               <div className="flex items-center space-x-1">
                 <Clock className="h-4 w-4" />
-                <span>{readTime} min</span>
+                <span>{safeReadTime} min</span>
               </div>
               <div className="flex items-center space-x-1">
                 <Eye className="h-4 w-4" />
-                <span>{views.toLocaleString()}</span>
+                <span>{safeViews.toLocaleString()}</span>
               </div>
             </div>
           </div>

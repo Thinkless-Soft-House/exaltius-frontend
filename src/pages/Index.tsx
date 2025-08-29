@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import { blogPosts } from "@/data/blogPosts";
+// data now comes from backend
+import { useGetPosts } from "@/hooks/useGetPosts";
 import Layout from "@/components/layout/Layout";
 import Sidebar from "@/components/layout/Sidebar";
 import PostCard from "@/components/blog/PostCard";
@@ -9,7 +10,21 @@ import { set } from "date-fns";
 import { useI18n } from "@/i18n/useI18n";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-type Post = typeof blogPosts[number];
+type Post = {
+  id: string | number;
+  title: string;
+  slug: string;
+  excerpt?: string;
+  content?: string;
+  category?: string;
+  author?: string;
+  publishedAt?: string;
+  tags?: string[];
+  imageUrl?: string;
+  featuredImage?: string;
+  views?: number;
+  readTime?: number;
+};
 
 // 1. Definir as tags (pseudocategorias Netflix)
 const TAGS = [
@@ -25,8 +40,7 @@ const TAGS = [
   "Reflexão do dia",
 ];
 
-// Usar blogPosts do mock real como fonte de dados
-const ALL_POSTS = blogPosts;
+// Não usar mais mocks: a fonte de verdade é o backend
 
 const PAGE_SIZE = 6; // Múltiplo de 3 para garantir linhas completas
 const TAGS_PER_PAGE = 3; // Quantas tags/seções mostrar por vez
@@ -46,21 +60,35 @@ const Index = () => {
   const sidebars = Array.from({ length: tagPage }, (_, i) => i);
   const isMobile = useIsMobile();
 
-  // Mock data - In a real app, this would come from an API
+  const { getRecent } = useGetPosts();
+
+  // Fetch posts from backend (fallback to mock)
   useEffect(() => {
-    // Set featured posts (latest 3)
-    setFeaturedPosts(ALL_POSTS.slice(0, 3));
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await getRecent('pt', PAGE_SIZE);
+        if (!mounted) return;
+        const items = (res?.data?.items as Post[] | undefined) ?? [];
+        setFeaturedPosts(items.slice(0, 3));
 
-    // Group posts by category
-    const grouped = ALL_POSTS.reduce((acc, post) => {
-      if (!acc[post.category]) {
-        acc[post.category] = [];
+        const grouped = (items as Post[]).reduce((acc: Record<string, Post[]>, post: Post) => {
+          const cat = post.category || 'Geral';
+          if (!acc[cat]) acc[cat] = [];
+          acc[cat].push(post);
+          return acc;
+        }, {} as Record<string, Post[]>);
+
+        setCategoryPosts(grouped);
+        setPostGroups(Object.entries(grouped).map(([category, posts]) => ({ category, posts: posts as Post[] })));
+      } catch (e) {
+        // fallback para mock
+        // fallback when backend fails: empty groups
+        setPostGroups([]);
       }
-      acc[post.category].push(post);
-      return acc;
-    }, {} as { [key: string]: Post[] });
-
-    setCategoryPosts(grouped);
+    })();
+    return () => { mounted = false };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const categories = useMemo(() => [
@@ -103,13 +131,8 @@ const Index = () => {
     setVisibleTags(TAGS.slice(0, TAGS_PER_PAGE * 2));
     setPage(1);
     // Primeira página: pega PAGE_SIZE posts e agrupa
-    const first = ALL_POSTS.slice(0, PAGE_SIZE);
-    const grouped: { [key: string]: Post[] } = {};
-    for (const post of first) {
-      if (!grouped[post.category]) grouped[post.category] = [];
-      grouped[post.category].push(post);
-    }
-    setPostGroups(Object.entries(grouped).map(([category, posts]) => ({ category, posts })));
+    // initial UI state empty; backend will populate when ready
+    setPostGroups([]);
     setLoading(false);
     console.log('[HOME: MONTANDO PÁGINA - RESETANDO ESTADO]');
   }, []);
@@ -130,38 +153,23 @@ const Index = () => {
   // Função para simular busca paginada (mock)
   const fetchPosts = async (pageNum: number) => {
     setLoading(true);
-    await new Promise((res) => setTimeout(res, 100));
-    const start = (pageNum - 1) * PAGE_SIZE;
-    const end = start + PAGE_SIZE;
-    let data: Post[] = [];
-    let isLoop = false;
-    if (start >= ALL_POSTS.length) {
-      // Loop: embaralha e agrupa
-      data = [...ALL_POSTS].sort(() => Math.random() - 0.5).slice(0, PAGE_SIZE);
-      isLoop = true;
-    } else if (end > ALL_POSTS.length) {
-      // Pega o resto e completa do início embaralhado
-      const rest = ALL_POSTS.slice(start);
-      const fill = [...ALL_POSTS].sort(() => Math.random() - 0.5).slice(0, end - ALL_POSTS.length);
-      data = [...rest, ...fill];
-      isLoop = true;
-    } else {
-      data = ALL_POSTS.slice(start, end);
-    }
-    let newGroups: { category: string, posts: Post[] }[] = [];
-    if (isLoop) {
-      newGroups = shuffleAndGroupByCategory(data);
-    } else {
-      // Agrupa normalmente
+    try {
+      const res = await getRecent('pt', PAGE_SIZE);
+      const items = (res?.data?.items as Post[] | undefined) ?? [];
+      // group by category and append
       const grouped: { [key: string]: Post[] } = {};
-      for (const post of data) {
-        if (!grouped[post.category]) grouped[post.category] = [];
-        grouped[post.category].push(post);
+      for (const post of items) {
+        const cat = post.category || 'Geral';
+        if (!grouped[cat]) grouped[cat] = [];
+        grouped[cat].push(post);
       }
-      newGroups = Object.entries(grouped).map(([category, posts]) => ({ category, posts }));
+      const newGroups = Object.entries(grouped).map(([category, posts]) => ({ category, posts }));
+      setPostGroups((prev) => [...prev, ...newGroups]);
+    } catch (e) {
+      // on error, do not append anything
+    } finally {
+      setLoading(false);
     }
-    setPostGroups((prev) => [...prev, ...newGroups]);
-    setLoading(false);
   };
 
   // Chama fetchPosts ao mudar a página (exceto na primeira)
@@ -279,7 +287,7 @@ const Index = () => {
                   >
                     {group.posts.map((post) => (
                       <div key={post.id} className="transition-opacity duration-500 opacity-100">
-                        <PostCard {...post} size="medium" />
+                        <PostCard {...post} id={String(post.id)} size="medium" />
                       </div>
                     ))}
                   </div>
