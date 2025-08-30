@@ -1,34 +1,16 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from "react";
-
-// Mapeamento de código de país para idioma
-const countryToLang: Record<string, string> = {
-  BR: "pt-BR",
-  US: "en",
-  GB: "en",
-  FR: "fr",
-  DE: "de",
-  ES: "es",
-  IT: "it",
-};
+import React, { useEffect, useState, ReactNode } from "react";
+import { I18nContext, I18nContextProps } from "./I18nContext";
 
 function getLangFromLocalStorage(): string {
   try {
-    const selected = localStorage.getItem("selectedCountry");
-    if (selected) {
-      const { value } = JSON.parse(selected);
-      return countryToLang[value] || "en";
+    const lang = localStorage.getItem("lang");
+    if (lang && ["en", "pt-BR", "es", "fr", "de", "it"].includes(lang)) {
+      return lang;
     }
-  } catch {}
+  } catch { /* empty */ }
   return "en";
 }
 
-interface I18nContextProps {
-  t: Record<string, string>;
-  lang: string;
-  setLang: (lang: string) => void;
-}
-
-const I18nContext = createContext<I18nContextProps | undefined>(undefined);
 
 export const I18nProvider = ({ children }: { children: ReactNode }) => {
   const [lang, setLang] = useState<string>(getLangFromLocalStorage());
@@ -40,6 +22,7 @@ export const I18nProvider = ({ children }: { children: ReactNode }) => {
       .catch(() => {
         import("./en.json").then((mod) => setT(mod.default || mod));
       });
+    localStorage.setItem("lang", lang);
   }, [lang]);
 
   // Atualiza idioma se localStorage mudar OU se selectedCountry mudar
@@ -72,8 +55,4 @@ export const I18nProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-export function useI18n() {
-  const ctx = useContext(I18nContext);
-  if (!ctx) throw new Error("useI18n must be used within I18nProvider");
-  return ctx;
-}
+

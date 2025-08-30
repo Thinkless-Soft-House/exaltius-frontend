@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import Sidebar from "@/components/layout/Sidebar";
 import PostCard from "@/components/blog/PostCard";
 import { Button } from "@/components/ui/button";
 import { TrendingUp, DollarSign, PiggyBank, GraduationCap, Loader2 } from "lucide-react";
-import { useI18n } from "@/i18n/I18nProvider";
+import { useI18n } from "@/i18n/useI18n";
 
 interface Post {
   id: string;
@@ -62,7 +62,7 @@ const Category = () => {
   const currentCategory = category ? categoryInfo[category as keyof typeof categoryInfo] : null;
 
   // Mock data - In a real app, this would come from an API
-  const mockPosts: Post[] = [
+  const mockPosts: Post[] = useMemo(() => [
     {
       id: "1",
       title: t.how_to_invest_stocks,
@@ -123,40 +123,41 @@ const Category = () => {
       views: 3200,
       featuredImage: "/lovable-uploads/2dd426b2-9eb4-4d68-a013-6cbcd6b717db.png"
     }
-  ];
+  ], [t]);
 
-  const loadPosts = async (pageNum: number) => {
+
+  const loadPosts = useCallback(async (pageNum: number) => {
     setLoading(true);
-    
+
     // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 1000));
-    
+
     // Filter posts by category and paginate
     const categoryName = currentCategory?.title || "";
-    const filteredPosts = mockPosts.filter(post => 
+    const filteredPosts = mockPosts.filter(post =>
       post.category.toLowerCase().includes(categoryName.toLowerCase())
     );
-    
+
     const startIndex = (pageNum - 1) * 6;
     const endIndex = startIndex + 6;
     const newPosts = filteredPosts.slice(startIndex, endIndex);
-    
+
     if (pageNum === 1) {
       setPosts(newPosts);
     } else {
       setPosts(prev => [...prev, ...newPosts]);
     }
-    
+
     setHasMore(endIndex < filteredPosts.length);
     setLoading(false);
-  };
+  }, [currentCategory, mockPosts]);
 
   useEffect(() => {
     if (currentCategory) {
       setPage(1);
       loadPosts(1);
     }
-  }, [category, currentCategory]);
+  }, [category, currentCategory, loadPosts]);
 
   const loadMore = () => {
     const nextPage = page + 1;
